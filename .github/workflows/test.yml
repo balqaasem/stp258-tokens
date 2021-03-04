@@ -30,7 +30,5 @@ jobs:
       run: rustup component add clippy
     - name: Build
       run: cargo build --verbose
-    - name: Cargo unleash check
-      run: cargo unleash checkout --verbose
     - name: Run tests
       run: CARGO test-all --verbose
