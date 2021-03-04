@@ -64,14 +64,15 @@ use frame_support::{
 	transactional,
 };
 use frame_system::{ensure_signed, pallet_prelude::*};
-use orml_traits::{
+use serp_traits::{
 	account::MergeAccount,
 	arithmetic::{self, Signed},
-	BalanceStatus, GetByKey, LockIdentifier, 
-	MultiCurrency as SettCurrency, 
-	MultiCurrencyExtended as SettCurrencyExtended, 
-	MultiLockableCurrency as SettCurrencyLockable, 
-	MultiReservableCurrency as SettCurrencyReservable, OnDust,
+	BalanceStatus, GetByKey, 
+	LockIdentifier, OnDust, 
+	SettCurrency, 
+	SettCurrencyExtended, 
+	SettCurrencyLockable, 
+	SettCurrencyReservable,
 };
 use sp_runtime::{
 	traits::{
@@ -486,13 +487,47 @@ impl<T: Config> Pallet<T> {
 impl<T: Config> SettCurrency<T::AccountId> for Pallet<T> {
 	type CurrencyId = T::CurrencyId;
 	type Balance = T::Balance;
-
+	
 	fn minimum_balance(currency_id: Self::CurrencyId) -> Self::Balance {
 		T::ExistentialDeposits::get(&currency_id)
 	}
 
 	fn total_issuance(currency_id: Self::CurrencyId) -> Self::Balance {
 		<TotalIssuance<T>>::get(currency_id)
+	}
+
+	/// Add `amount` to the balance of `who` under `currency_id` and increase
+	/// total issuance.
+	/// Is a no-op if the `amount` to be deposited is zero.
+	fn deposit_expand_issuance(currency_id: Self::CurrencyId, who: &T::AccountId, amount: Self::Balance) -> DispatchResult {
+		if amount.is_zero() {
+			return Ok(());
+		}
+
+		TotalIssuance::<T>::try_mutate(currency_id, |total_issuance| -> DispatchResult {
+			*total_issuance = total_issuance
+				.checked_add(&amount)
+				.ok_or(Error::<T>::TotalIssuanceOverflow)?;
+
+			Self::set_free_balance(currency_id, who, Self::free_balance(currency_id, who) + amount);
+
+			Ok(())
+		})
+	}
+
+	/// Remove `amount` from the balance of `who` under `currency_id` and reduce
+	/// total issuance.
+	fn withdraw_contract_issuance(currency_id: Self::CurrencyId, who: &T::AccountId, amount: Self::Balance) -> DispatchResult {
+		if amount.is_zero() {
+			return Ok(());
+		}
+		Self::ensure_can_withdraw(currency_id, who, amount)?;
+
+		// Cannot underflow because ensure_can_withdraw check
+		<TotalIssuance<T>>::mutate(currency_id, |v| *v -= amount);
+		Self::set_free_balance(currency_id, who, Self::free_balance(currency_id, who) - amount);
+
+		Ok(())
 	}
 
 	fn total_balance(currency_id: Self::CurrencyId, who: &T::AccountId) -> Self::Balance {
@@ -857,6 +892,11 @@ where
 		Pallet::<T>::minimum_balance(GetCurrencyId::get())
 	}
 
+	/// Reduce the total issuance of Dinar when Bought with SettCurrencies by `amount` and return the according imbalance. The imbalance will
+	/// typically be used to reduce an account by the same amount with e.g. `settle`.
+	///
+	/// This is infallible, but doesn't guarantee that the entire `amount` is burnt, for example
+	/// in the case of underflow.
 	fn burn(mut amount: Self::Balance) -> Self::PositiveImbalance {
 		if amount.is_zero() {
 			return PositiveImbalance::zero();
@@ -870,6 +910,12 @@ where
 		PositiveImbalance::new(amount)
 	}
 
+	/// Increase the total issuance of Dinar when Sold for SettCurrencies by `amount` and return the according imbalance. The imbalance
+	/// will typically be used to increase an account by the same amount with e.g.
+	/// `resolve_into_existing` or `resolve_creating`.
+	///
+	/// This is infallible, but doesn't guarantee that the entire `amount` is issued, for example
+	/// in the case of overflow.
 	fn issue(mut amount: Self::Balance) -> Self::NegativeImbalance {
 		if amount.is_zero() {
 			return NegativeImbalance::zero();

@@ -7,7 +7,7 @@ use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{ChangeMembers, Contains, ContainsLengthBound, SaturatingCurrencyToVote},
 };
-use orml_traits::parameter_type_with_key;
+use serp_traits::parameter_type_with_key;
 use sp_core::H256;
 use sp_runtime::{testing::Header, traits::IdentityLookup, AccountId32, Permill};
 use sp_std::cell::RefCell;
