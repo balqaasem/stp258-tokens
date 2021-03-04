@@ -892,43 +892,6 @@ where
 		Pallet::<T>::minimum_balance(GetCurrencyId::get())
 	}
 
-	/// Reduce the total issuance of Dinar when Bought with SettCurrencies by `amount` and return the according imbalance. The imbalance will
-	/// typically be used to reduce an account by the same amount with e.g. `settle`.
-	///
-	/// This is infallible, but doesn't guarantee that the entire `amount` is burnt, for example
-	/// in the case of underflow.
-	fn burn(mut amount: Self::Balance) -> Self::PositiveImbalance {
-		if amount.is_zero() {
-			return PositiveImbalance::zero();
-		}
-		<TotalIssuance<T>>::mutate(GetCurrencyId::get(), |issued| {
-			*issued = issued.checked_sub(&amount).unwrap_or_else(|| {
-				amount = *issued;
-				Zero::zero()
-			});
-		});
-		PositiveImbalance::new(amount)
-	}
-
-	/// Increase the total issuance of Dinar when Sold for SettCurrencies by `amount` and return the according imbalance. The imbalance
-	/// will typically be used to increase an account by the same amount with e.g.
-	/// `resolve_into_existing` or `resolve_creating`.
-	///
-	/// This is infallible, but doesn't guarantee that the entire `amount` is issued, for example
-	/// in the case of overflow.
-	fn issue(mut amount: Self::Balance) -> Self::NegativeImbalance {
-		if amount.is_zero() {
-			return NegativeImbalance::zero();
-		}
-		<TotalIssuance<T>>::mutate(GetCurrencyId::get(), |issued| {
-			*issued = issued.checked_add(&amount).unwrap_or_else(|| {
-				amount = Self::Balance::max_value() - *issued;
-				Self::Balance::max_value()
-			})
-		});
-		NegativeImbalance::new(amount)
-	}
-
 	fn free_balance(who: &T::AccountId) -> Self::Balance {
 		Pallet::<T>::free_balance(GetCurrencyId::get(), who)
 	}
