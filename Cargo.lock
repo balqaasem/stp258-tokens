@@ -5324,8 +5324,8 @@ dependencies = [
 
 [[package]]
 name = "serp-traits"
-version = "0.4.3-dev"
-source = "git+https://github.com/Setheum-Labs/serp-traits#de10da1ab7ead7710f93283da98398e0d1b4c4aa"
+version = "0.5.0-dev"
+source = "git+https://github.com/Setheum-Labs/serp-traits#86a4c8432e398532b91e466bfddb368b9cae1cb0"
 dependencies = [
  "frame-support",
  "funty",
@@ -6208,7 +6208,7 @@ dependencies = [
 
 [[package]]
 name = "stp258-tokens"
-version = "0.4.3-dev"
+version = "0.5.0-dev"
 dependencies = [
  "fixed",
  "frame-benchmarking-cli",
@@ -6895,7 +6895,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04f8ab788026715fa63b31960869617cba39117e520eb415b0139543e325ab59"
 dependencies = [
  "cfg-if 0.1.10",
- "rand 0.7.3",
+ "rand 0.3.23",
  "static_assertions",
 ]
 
