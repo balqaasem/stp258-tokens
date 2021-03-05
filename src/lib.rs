@@ -495,41 +495,7 @@ impl<T: Config> SettCurrency<T::AccountId> for Pallet<T> {
 	fn total_issuance(currency_id: Self::CurrencyId) -> Self::Balance {
 		<TotalIssuance<T>>::get(currency_id)
 	}
-
-	/// Add `amount` to the balance of `who` under `currency_id` and increase
-	/// total issuance.
-	/// Is a no-op if the `amount` to be deposited is zero.
-	fn deposit_expand_issuance(currency_id: Self::CurrencyId, who: &T::AccountId, amount: Self::Balance) -> DispatchResult {
-		if amount.is_zero() {
-			return Ok(());
-		}
-
-		TotalIssuance::<T>::try_mutate(currency_id, |total_issuance| -> DispatchResult {
-			*total_issuance = total_issuance
-				.checked_add(&amount)
-				.ok_or(Error::<T>::TotalIssuanceOverflow)?;
-
-			Self::set_free_balance(currency_id, who, Self::free_balance(currency_id, who) + amount);
-
-			Ok(())
-		})
-	}
-
-	/// Remove `amount` from the balance of `who` under `currency_id` and reduce
-	/// total issuance.
-	fn withdraw_contract_issuance(currency_id: Self::CurrencyId, who: &T::AccountId, amount: Self::Balance) -> DispatchResult {
-		if amount.is_zero() {
-			return Ok(());
-		}
-		Self::ensure_can_withdraw(currency_id, who, amount)?;
-
-		// Cannot underflow because ensure_can_withdraw check
-		<TotalIssuance<T>>::mutate(currency_id, |v| *v -= amount);
-		Self::set_free_balance(currency_id, who, Self::free_balance(currency_id, who) - amount);
-
-		Ok(())
-	}
-
+	
 	fn total_balance(currency_id: Self::CurrencyId, who: &T::AccountId) -> Self::Balance {
 		Self::accounts(who, currency_id).total()
 	}
