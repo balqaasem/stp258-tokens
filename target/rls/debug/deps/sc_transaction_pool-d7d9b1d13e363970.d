@@ -1,0 +1,9 @@
+/home/iamkhalifaMBA/Documents/GitHub/stp258-tokens/target/rls/debug/deps/sc_transaction_pool-d7d9b1d13e363970.rmeta: /home/iamkhalifaMBA/.cargo/registry/src/github.com-1ecc6299db9ec823/sc-transaction-pool-3.0.0/src/lib.rs /home/iamkhalifaMBA/.cargo/registry/src/github.com-1ecc6299db9ec823/sc-transaction-pool-3.0.0/src/api.rs /home/iamkhalifaMBA/.cargo/registry/src/github.com-1ecc6299db9ec823/sc-transaction-pool-3.0.0/src/revalidation.rs /home/iamkhalifaMBA/.cargo/registry/src/github.com-1ecc6299db9ec823/sc-transaction-pool-3.0.0/src/metrics.rs /home/iamkhalifaMBA/.cargo/registry/src/github.com-1ecc6299db9ec823/sc-transaction-pool-3.0.0/src/error.rs
+
+/home/iamkhalifaMBA/Documents/GitHub/stp258-tokens/target/rls/debug/deps/sc_transaction_pool-d7d9b1d13e363970.d: /home/iamkhalifaMBA/.cargo/registry/src/github.com-1ecc6299db9ec823/sc-transaction-pool-3.0.0/src/lib.rs /home/iamkhalifaMBA/.cargo/registry/src/github.com-1ecc6299db9ec823/sc-transaction-pool-3.0.0/src/api.rs /home/iamkhalifaMBA/.cargo/registry/src/github.com-1ecc6299db9ec823/sc-transaction-pool-3.0.0/src/revalidation.rs /home/iamkhalifaMBA/.cargo/registry/src/github.com-1ecc6299db9ec823/sc-transaction-pool-3.0.0/src/metrics.rs /home/iamkhalifaMBA/.cargo/registry/src/github.com-1ecc6299db9ec823/sc-transaction-pool-3.0.0/src/error.rs
+
+/home/iamkhalifaMBA/.cargo/registry/src/github.com-1ecc6299db9ec823/sc-transaction-pool-3.0.0/src/lib.rs:
+/home/iamkhalifaMBA/.cargo/registry/src/github.com-1ecc6299db9ec823/sc-transaction-pool-3.0.0/src/api.rs:
+/home/iamkhalifaMBA/.cargo/registry/src/github.com-1ecc6299db9ec823/sc-transaction-pool-3.0.0/src/revalidation.rs:
+/home/iamkhalifaMBA/.cargo/registry/src/github.com-1ecc6299db9ec823/sc-transaction-pool-3.0.0/src/metrics.rs:
+/home/iamkhalifaMBA/.cargo/registry/src/github.com-1ecc6299db9ec823/sc-transaction-pool-3.0.0/src/error.rs:
