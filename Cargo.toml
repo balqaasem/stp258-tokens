@@ -15,7 +15,7 @@ sp-runtime = { version = "3.0.0", default-features = false }
 sp-std = { version = "3.0.0", default-features = false }
 frame-support = { version = "3.0.0", default-features = false }
 frame-system = { version = "3.0.0", default-features = false }
-serp-traits = { version = '0.5.0-dev', git = "https://github.com/Setheum-Labs/serp-traits"}
+stp258-traits = { version = '0.5.0-dev', git = "https://github.com/Setheum-Labs/stp258-traits"}
 
 funty = { version = "1.1.0", default-features = false } # https://github.com/bitvecto-rs/bitvec/issues/105
 
@@ -39,7 +39,7 @@ std = [
 	"sp-std/std",
 	"frame-support/std",
 	"frame-system/std",
-	"serp-traits/std",
+	"stp258-traits/std",
     "num-rational/std",
 	"num-traits/std",
    	"fixed/std",
