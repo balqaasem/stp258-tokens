@@ -56,9 +56,9 @@ use frame_support::{
 	ensure,
 	pallet_prelude::*,
 	traits::{
-		BalanceStatus as Status, Currency as PalletCurrency, ExistenceRequirement, 
-		Get, Imbalance, LockableCurrency as PalletLockableCurrency, 
-		ReservableCurrency as PalletReservableCurrency, SignedImbalance,
+		BalanceStatus as Status, Currency as SetheumCurrency, ExistenceRequirement, 
+		Get, Imbalance, LockableCurrency as SetheumLockableCurrency, 
+		ReservableCurrency as SetheumReservableCurrency, SignedImbalance,
 		WithdrawReasons,
 	},
 	transactional,
@@ -69,10 +69,10 @@ use stp258_traits::{
 	arithmetic::{self, Signed},
 	BalanceStatus, GetByKey, 
 	LockIdentifier, OnDust, 
-	SettCurrency, 
-	SettCurrencyExtended, 
-	SettCurrencyLockable, 
-	SettCurrencyReservable,
+	Stp258Currency, 
+	Stp258CurrencyExtended, 
+	Stp258CurrencyReservable,
+	Stp258CurrencyLockable,
 };
 use sp_runtime::{
 	traits::{
@@ -102,7 +102,7 @@ where
 	fn on_dust(who: &T::AccountId, currency_id: T::CurrencyId, amount: T::Balance) {
 		// transfer the dust to treasury account, ignore the result,
 		// if failed will leave some dust which still could be recycled.
-		let _ = <Pallet<T> as SettCurrency<T::AccountId>>::transfer(currency_id, who, &GetAccountId::get(), amount);
+		let _ = <Pallet<T> as Stp258Currency<T::AccountId>>::transfer(currency_id, who, &GetAccountId::get(), amount);
 	}
 }
 
@@ -336,7 +336,7 @@ pub mod module {
 		) -> DispatchResultWithPostInfo {
 			let from = ensure_signed(origin)?;
 			let to = T::Lookup::lookup(dest)?;
-			<Self as SettCurrency<_>>::transfer(currency_id, &from, &to, amount)?;
+			<Self as Stp258Currency<_>>::transfer(currency_id, &from, &to, amount)?;
 
 			Self::deposit_event(Event::Transferred(currency_id, from, to, amount));
 			Ok(().into())
@@ -354,8 +354,8 @@ pub mod module {
 		) -> DispatchResultWithPostInfo {
 			let from = ensure_signed(origin)?;
 			let to = T::Lookup::lookup(dest)?;
-			let balance = <Self as SettCurrency<T::AccountId>>::free_balance(currency_id, &from);
-			<Self as SettCurrency<T::AccountId>>::transfer(currency_id, &from, &to, balance)?;
+			let balance = <Self as Stp258Currency<T::AccountId>>::free_balance(currency_id, &from);
+			<Self as Stp258Currency<T::AccountId>>::transfer(currency_id, &from, &to, balance)?;
 
 			Self::deposit_event(Event::Transferred(currency_id, from, to, balance));
 			Ok(().into())
@@ -484,7 +484,7 @@ impl<T: Config> Pallet<T> {
 	}
 }
 
-impl<T: Config> SettCurrency<T::AccountId> for Pallet<T> {
+impl<T: Config> Stp258Currency<T::AccountId> for Pallet<T> {
 	type CurrencyId = T::CurrencyId;
 	type Balance = T::Balance;
 	
@@ -626,7 +626,7 @@ impl<T: Config> SettCurrency<T::AccountId> for Pallet<T> {
 	}
 }
 
-impl<T: Config> SettCurrencyExtended<T::AccountId> for Pallet<T> {
+impl<T: Config> Stp258CurrencyExtended<T::AccountId> for Pallet<T> {
 	type Amount = T::Amount;
 
 	fn update_balance(currency_id: Self::CurrencyId, who: &T::AccountId, by_amount: Self::Amount) -> DispatchResult {
@@ -652,7 +652,7 @@ impl<T: Config> SettCurrencyExtended<T::AccountId> for Pallet<T> {
 	}
 }
 
-impl<T: Config> SettCurrencyLockable<T::AccountId> for Pallet<T> {
+impl<T: Config> Stp258CurrencyLockable<T::AccountId> for Pallet<T> {
 	type Moment = T::BlockNumber;
 
 	// Set a lock on the balance of `who` under `currency_id`.
@@ -724,7 +724,7 @@ impl<T: Config> SettCurrencyLockable<T::AccountId> for Pallet<T> {
 	}
 }
 
-impl<T: Config> SettCurrencyReservable<T::AccountId> for Pallet<T> {
+impl<T: Config> Stp258CurrencyReservable<T::AccountId> for Pallet<T> {
 	/// Check if `who` can reserve `value` from their free balance.
 	///
 	/// Always `true` if value to be reserved is zero.
@@ -833,7 +833,7 @@ impl<T: Config> SettCurrencyReservable<T::AccountId> for Pallet<T> {
 
 pub struct CurrencyAdapter<T, GetCurrencyId>(marker::PhantomData<(T, GetCurrencyId)>);
 
-impl<T, GetCurrencyId> PalletCurrency<T::AccountId> for CurrencyAdapter<T, GetCurrencyId>
+impl<T, GetCurrencyId> SetheumCurrency<T::AccountId> for CurrencyAdapter<T, GetCurrencyId>
 where
 	T: Config,
 	GetCurrencyId: Get<T::CurrencyId>,
@@ -914,7 +914,7 @@ where
 		value: Self::Balance,
 		_existence_requirement: ExistenceRequirement,
 	) -> DispatchResult {
-		<Pallet<T> as SettCurrency<T::AccountId>>::transfer(GetCurrencyId::get(), &source, &dest, value)
+		<Pallet<T> as Stp258Currency<T::AccountId>>::transfer(GetCurrencyId::get(), &source, &dest, value)
 	}
 
 	fn slash(who: &T::AccountId, value: Self::Balance) -> (Self::NegativeImbalance, Self::Balance) {
@@ -1014,7 +1014,7 @@ where
 	}
 }
 
-impl<T, GetCurrencyId> PalletReservableCurrency<T::AccountId> for CurrencyAdapter<T, GetCurrencyId>
+impl<T, GetCurrencyId> SetheumReservableCurrency<T::AccountId> for CurrencyAdapter<T, GetCurrencyId>
 where
 	T: Config,
 	GetCurrencyId: Get<T::CurrencyId>,
@@ -1050,7 +1050,7 @@ where
 	}
 }
 
-impl<T, GetCurrencyId> PalletLockableCurrency<T::AccountId> for CurrencyAdapter<T, GetCurrencyId>
+impl<T, GetCurrencyId> SetheumLockableCurrency<T::AccountId> for CurrencyAdapter<T, GetCurrencyId>
 where
 	T: Config,
 	GetCurrencyId: Get<T::CurrencyId>,
@@ -1079,7 +1079,7 @@ impl<T: Config> MergeAccount<T::AccountId> for Pallet<T> {
 			ensure!(account_data.reserved.is_zero(), Error::<T>::StillHasActiveReserved);
 
 			// transfer all free to recipient
-			<Self as SettCurrency<T::AccountId>>::transfer(currency_id, source, dest, account_data.free)?;
+			<Self as Stp258Currency<T::AccountId>>::transfer(currency_id, source, dest, account_data.free)?;
 			Ok(())
 		})
 	}
