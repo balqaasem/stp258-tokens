@@ -15,22 +15,13 @@
 //! - Minting and Burning currencies.
 //! - Fetching prices for currencies.
 //! - A basket_token could be made by combining a basket of prices into one in any desired ratio. Could be done on runtime, the basket_token price_of_pegs and basket_ratio logic could be defined in an offchain worker and fed on-chain.
-//! 
-//!  It also implement an atomic swap, to atomically swap currencies 
-//!  
-//! - `create_swap` - called by a sender to register a new atomic swap
-//! - `claim_swap` - called by the target to approve a swap
-//! - `cancel_swap` - may be called by a sender after a specified duration.
-//!
 //!
 //! ### Implementations
 //!
 //! The stp258 module provides implementations for following traits.
 //!
-//! - `SettCurrency` - Abstraction over a fungible multi-currency stablecoin system 
-//! that includes `basket_token` as pegged to a basket of currencies, `price` of 
-//! currencies and `sett_swap` to atomically swap currencies.
-//! - `SettCurrencyExtended` - Extended `SettCurrency` with additional helper
+//! - `Stp258Currency` - Abstraction over a fungible multi-currency stablecoin system.
+//! - `Stp258CurrencyExtended` - Extended `Stp258Currency` with additional helper
 //!   types and methods, like updating balance
 //! by a given signed integer amount.
 //!
