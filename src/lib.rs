@@ -45,14 +45,14 @@ pub use crate::imbalances::{NegativeImbalance, PositiveImbalance};
 
 use frame_support::{
 	ensure,
-	pallet_prelude::*,
-	traits::{
-		BalanceStatus as Status, Currency as SetheumCurrency, ExistenceRequirement, 
-		Get, Imbalance, LockableCurrency as SetheumLockableCurrency, 
-		ReservableCurrency as SetheumReservableCurrency, SignedImbalance,
-		WithdrawReasons,
-	},
+	pallet_prelude::*, 
 	transactional,
+	traits::{
+		BalanceStatus as Status, 
+		ExistenceRequirement, Get, 
+		Imbalance, SignedImbalance, WithdrawReasons,
+
+	},
 };
 use frame_system::{ensure_signed, pallet_prelude::*};
 use stp258_traits::{
@@ -62,8 +62,13 @@ use stp258_traits::{
 	LockIdentifier, OnDust, 
 	Stp258Currency, 
 	Stp258CurrencyExtended, 
-	Stp258CurrencyReservable,
+	Stp258CurrencyReservable, 
 	Stp258CurrencyLockable,
+	setheum_currency::{
+		Currency as SetheumCurrency, 
+		LockableCurrency as SetheumLockableCurrency, 
+		ReservableCurrency as SetheumReservableCurrency
+	}
 };
 use sp_runtime::{
 	traits::{
@@ -742,6 +747,25 @@ impl<T: Config> Stp258CurrencyReservable<T::AccountId> for Pallet<T> {
 		value - actual
 	}
 
+
+	/// Burns up to `value` from reserved balance of `who`. This function 
+	/// cannot fail.
+	///
+	/// As much funds up to `value` will be burnt as possible. If the reserve 
+	/// balance of `who` is less than `value`, then a non-zero second item will 
+	/// be returned.
+	fn burn_reserved(currency_id: Self::CurrencyId, who: &T::AccountId, value: Self::Balance) -> Self::Balance {
+		if value.is_zero() {
+			return value;
+		}
+
+		let reserved_balance = Self::reserved_balance(currency_id, who);
+		let actual = reserved_balance.min(value);
+		Self::set_reserved_balance(currency_id, who, reserved_balance - actual);
+		<TotalIssuance<T>>::mutate(currency_id, |v| *v -= actual);
+		value - actual
+	}
+
 	/// Mint to reserved balance of `who`, returning any amount that was unable to
 	/// be created.
 	///
@@ -1041,9 +1065,20 @@ where
 		(Self::NegativeImbalance::zero(), actual)
 	}
 
-	fn create_reserved(who: &T::AccountId, value: Self::Balance) -> (Self::PositiveImbalance, Self::Balance) {
-		let actual = Pallet::<T>::create_reserved(GetCurrencyId::get(), who, value);
-		(Self::PositiveImbalance::zero(), actual)
+	fn burn_reserved(who: &T::AccountId, value: Self::Balance) -> Self::Balance {
+		let reserved_balance = Self::reserved_balance(GetCurrencyId::get(), who);
+		let actual = reserved_balance.min(value);
+		Pallet::<T>::set_reserved_balance(GetCurrencyId::get(), who, reserved_balance - actual);
+		<TotalIssuance<T>>::mutate(GetCurrencyId::get(), |v| *v -= actual);
+		value + actual
+	}
+	
+	fn create_reserved(who: &T::AccountId, value: Self::Balance) -> Self::Balance {
+		let reserved_balance = Self::reserved_balance(GetCurrencyId::get(), who);
+		let actual = reserved_balance.min(value);
+		Pallet::<T>::set_reserved_balance(GetCurrencyId::get(), who, reserved_balance + actual);
+		<TotalIssuance<T>>::mutate(GetCurrencyId::get(), |v| *v += actual);
+		value + actual
 	}
 
 	fn reserved_balance(who: &T::AccountId) -> Self::Balance {
