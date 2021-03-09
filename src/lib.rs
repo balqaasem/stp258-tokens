@@ -55,19 +55,19 @@ use frame_support::{
 };
 use frame_system::{ensure_signed, pallet_prelude::*};
 use stp258_traits::{
-	account::MergeAccount,
+	account::MergeAccount, GetByKey,
 	arithmetic::{self, Signed},
 	setheum_currency::{
 		BalanceStatus as Status, Currency as SetheumCurrency, 
 		LockableCurrency as SetheumLockableCurrency, 
 		ReservableCurrency as SetheumReservableCurrency
-	}
+	},
 	stp258_currency::{
 		Stp258Currency, 
 		Stp258CurrencyExtended, 
 		Stp258CurrencyReservable, 
 		Stp258CurrencyLockable,
-		LockIdentifier, OnDust, GetByKey, 
+		LockIdentifier, OnDust, 
 	},
 };
 use sp_runtime::{
@@ -208,6 +208,8 @@ pub mod module {
 		BalanceOverflow,
 		/// This operation will cause total issuance to overflow
 		TotalIssuanceOverflow,
+		/// This operation will cause total issuance to overflow
+		TotalIssuanceUnderflow,
 		/// Cannot convert Amount into Balance type
 		AmountIntoBalanceFailed,
 		/// Failed because liquidity restrictions due to locking
@@ -747,41 +749,45 @@ impl<T: Config> Stp258CurrencyReservable<T::AccountId> for Pallet<T> {
 		value - actual
 	}
 
-
-	/// Burns up to `value` from reserved balance of `who`. This function 
-	/// cannot fail.
-	///
-	/// As much funds up to `value` will be burnt as possible. If the reserve 
-	/// balance of `who` is less than `value`, then a non-zero second item will 
-	/// be returned.
-	fn burn_reserved(currency_id: Self::CurrencyId, who: &T::AccountId, value: Self::Balance) -> Self::Balance {
+	/// Burns `value` from reserved balance of `who`. This function 
+	/// returns `TotalIssuanceUnderflow` as error if underflow. Increases `total_issuance`.
+	/// It changes `TotalIssuance`.
+	/// Is a no-op if the `value` to be deposited is zero.
+	fn burn_reserved(currency_id: Self::CurrencyId, who: &T::AccountId, value: Self::Balance) -> DispatchResult {
 		if value.is_zero() {
-			return value;
+			return Ok(());
 		}
 
-		let reserved_balance = Self::reserved_balance(currency_id, who);
-		let actual = reserved_balance.min(value);
-		Self::set_reserved_balance(currency_id, who, reserved_balance - actual);
-		<TotalIssuance<T>>::mutate(currency_id, |v| *v -= actual);
-		value - actual
+		TotalIssuance::<T>::try_mutate(currency_id, |total_issuance| -> DispatchResult {
+			*total_issuance = total_issuance
+				.checked_sub(&value)
+				.ok_or(Error::<T>::TotalIssuanceUnderflow)?;
+		Self::set_reserved_balance(currency_id, who, Self::reserved_balance(currency_id, who) - value);
+
+		Ok(())
+		})
 	}
 
-	/// Mint to reserved balance of `who`, returning any amount that was unable to
-	/// be created.
-	///
-	/// As much funds up to `value` will be added as possible.
-	fn create_reserved(currency_id: Self::CurrencyId, who: &T::AccountId, value: Self::Balance) -> Self::Balance {
+	/// Mints `value` to reserved balance of `who`. This function 
+	/// returns `TotalIssuanceOverflow` as error if overflow. Increases `total_issuance`.
+	/// It changes `TotalIssuance`.
+	/// Is a no-op if the `value` to be deposited is zero.
+	fn create_reserved(currency_id: Self::CurrencyId, who: &T::AccountId, value: Self::Balance) -> DispatchResult {
 		if value.is_zero() {
-			return value;
+			return Ok(());
 		}
 
-		let reserved_balance = Self::reserved_balance(currency_id, who);
-		let actual = reserved_balance.min(value);
-		Self::set_reserved_balance(currency_id, who, reserved_balance + actual);
-		<TotalIssuance<T>>::mutate(currency_id, |v| *v += actual);
-		value + actual
+		TotalIssuance::<T>::try_mutate(currency_id, |total_issuance| -> DispatchResult {
+			*total_issuance = total_issuance
+				.checked_add(&value)
+				.ok_or(Error::<T>::TotalIssuanceOverflow)?;
+
+			Self::set_reserved_balance(currency_id, who, Self::reserved_balance(currency_id, who) + value);
+
+			Ok(())
+		})
 	}
-	
+
 	/// The amount of the balance of a given account that is externally
 	/// reserved; this can still get slashed, but gets slashed last of all.
 	///
@@ -1065,20 +1071,43 @@ where
 		(Self::NegativeImbalance::zero(), actual)
 	}
 
-	fn burn_reserved(who: &T::AccountId, value: Self::Balance) -> Self::Balance {
-		let reserved_balance = Self::reserved_balance(GetCurrencyId::get(), who);
-		let actual = reserved_balance.min(value);
-		Pallet::<T>::set_reserved_balance(GetCurrencyId::get(), who, reserved_balance - actual);
-		<TotalIssuance<T>>::mutate(GetCurrencyId::get(), |v| *v -= actual);
-		value + actual
+	/// Burns `value` from reserved balance of `who`. This function 
+	/// returns `TotalIssuanceUnderflow` as error if underflow. Increases `total_issuance`.
+	/// It changes `TotalIssuance`.
+	/// Is a no-op if the `value` to be deposited is zero.
+	fn burn_reserved(who: &T::AccountId, value: Self::Balance) -> DispatchResult {
+		if value.is_zero() {
+			return Ok(());
+		}
+
+		TotalIssuance::<T>::try_mutate(GetCurrencyId::get(), |total_issuance| -> DispatchResult {
+			*total_issuance = total_issuance
+				.checked_sub(&value)
+				.ok_or(Error::<T>::TotalIssuanceUnderflow)?;
+		Pallet::<T>::set_reserved_balance(GetCurrencyId::get(), who, Pallet::<T>::reserved_balance(GetCurrencyId::get(), who) - value);
+
+		Ok(())
+		})
 	}
-	
-	fn create_reserved(who: &T::AccountId, value: Self::Balance) -> Self::Balance {
-		let reserved_balance = Self::reserved_balance(GetCurrencyId::get(), who);
-		let actual = reserved_balance.min(value);
-		Pallet::<T>::set_reserved_balance(GetCurrencyId::get(), who, reserved_balance + actual);
-		<TotalIssuance<T>>::mutate(GetCurrencyId::get(), |v| *v += actual);
-		value + actual
+
+	/// Mints `value` to reserved balance of `who`. This function 
+	/// returns `TotalIssuanceOverflow` as error if overflow. Increases `total_issuance`.
+	/// It changes `TotalIssuance`.
+	/// Is a no-op if the `value` to be deposited is zero.
+	fn create_reserved(who: &T::AccountId, value: Self::Balance) -> DispatchResult {
+		if value.is_zero() {
+			return Ok(());
+		}
+
+		TotalIssuance::<T>::try_mutate(GetCurrencyId::get(), |total_issuance| -> DispatchResult {
+			*total_issuance = total_issuance
+				.checked_add(&value)
+				.ok_or(Error::<T>::TotalIssuanceOverflow)?;
+
+			Pallet::<T>::set_reserved_balance(GetCurrencyId::get(), who, Pallet::<T>::reserved_balance(GetCurrencyId::get(), who) + value);
+
+			Ok(())
+		})
 	}
 
 	fn reserved_balance(who: &T::AccountId) -> Self::Balance {
