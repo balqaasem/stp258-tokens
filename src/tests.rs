@@ -208,6 +208,27 @@ fn slash_reserved_should_work() {
 }
 
 #[test]
+fn create_reserved_should_work() {
+	ExtBuilder::default()
+		.one_hundred_for_alice_n_bob()
+		.build()
+		.execute_with(|| {
+			assert_ok!(Stp258Tokens::reserve(DOT, &ALICE, 50));
+			assert_eq!(Stp258Tokens::free_balance(DOT, &ALICE), 50);
+			assert_eq!(Stp258Tokens::reserved_balance(DOT, &ALICE), 50);
+			assert_eq!(Stp258Tokens::total_issuance(DOT), 200);
+			assert_eq!(Stp258Tokens::create_reserved(DOT, &ALICE, 0), 0);
+			assert_eq!(Stp258Tokens::free_balance(DOT, &ALICE), 50);
+			assert_eq!(Stp258Tokens::reserved_balance(DOT, &ALICE), 50);
+			assert_eq!(Stp258Tokens::total_issuance(DOT), 200);
+			assert_eq!(Stp258Tokens::create_reserved(DOT, &ALICE, 100), 50);
+			assert_eq!(Stp258Tokens::free_balance(DOT, &ALICE), 50);
+			assert_eq!(Stp258Tokens::reserved_balance(DOT, &ALICE), 0);
+			assert_eq!(Stp258Tokens::total_issuance(DOT), 250);
+		});
+}
+
+#[test]
 fn repatriate_reserved_should_work() {
 	ExtBuilder::default()
 		.one_hundred_for_alice_n_bob()
@@ -877,6 +898,18 @@ fn currency_adapter_slashing_incomplete_reserved_balance_should_work() {
 		let _ = TreasuryCurrencyAdapter::deposit_creating(&TREASURY_ACCOUNT, 111);
 		assert_ok!(TreasuryCurrencyAdapter::reserve(&TREASURY_ACCOUNT, 42));
 		assert_eq!(TreasuryCurrencyAdapter::slash_reserved(&TREASURY_ACCOUNT, 69).1, 27);
+		assert_eq!(TreasuryCurrencyAdapter::free_balance(&TREASURY_ACCOUNT), 69);
+		assert_eq!(TreasuryCurrencyAdapter::reserved_balance(&TREASURY_ACCOUNT), 0);
+		assert_eq!(TreasuryCurrencyAdapter::total_issuance(), 69);
+	});
+}
+
+#[test]
+fn currency_adapter_creating_incomplete_reserved_balance_should_work() {
+	ExtBuilder::default().build().execute_with(|| {
+		let _ = TreasuryCurrencyAdapter::deposit_creating(&TREASURY_ACCOUNT, 111);
+		assert_ok!(TreasuryCurrencyAdapter::reserve(&TREASURY_ACCOUNT, 42));
+		assert_eq!(TreasuryCurrencyAdapter::create_reserved(&TREASURY_ACCOUNT, 69).1, 27);
 		assert_eq!(TreasuryCurrencyAdapter::free_balance(&TREASURY_ACCOUNT), 69);
 		assert_eq!(TreasuryCurrencyAdapter::reserved_balance(&TREASURY_ACCOUNT), 0);
 		assert_eq!(TreasuryCurrencyAdapter::total_issuance(), 69);
