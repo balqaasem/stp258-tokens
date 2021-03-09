@@ -742,6 +742,28 @@ impl<T: Config> Stp258CurrencyReservable<T::AccountId> for Pallet<T> {
 		value - actual
 	}
 
+	/// Mint to reserved balance of `who`, returning any amount that was unable to
+	/// be created.
+	///
+	/// As much funds up to `value` will be added as possible.
+	fn create_reserved(currency_id: Self::CurrencyId, who: &T::AccountId, value: Self::Balance) -> Self::Balance {
+		if value.is_zero() {
+			return value;
+		}
+
+		let reserved_balance = Self::reserved_balance(currency_id, who);
+		let actual = reserved_balance.min(value);
+		Self::set_reserved_balance(currency_id, who, reserved_balance + actual);
+		<TotalIssuance<T>>::mutate(currency_id, |v| *v += actual);
+		value + actual
+	}
+	
+	/// The amount of the balance of a given account that is externally
+	/// reserved; this can still get slashed, but gets slashed last of all.
+	///
+	/// This balance is a 'reserve' balance that other subsystems use in order
+	/// to set aside tokens that are still 'owned' by the account holder, but
+	/// which are suspendable.
 	fn reserved_balance(currency_id: Self::CurrencyId, who: &T::AccountId) -> Self::Balance {
 		Self::accounts(who, currency_id).reserved
 	}
@@ -1017,6 +1039,11 @@ where
 	fn slash_reserved(who: &T::AccountId, value: Self::Balance) -> (Self::NegativeImbalance, Self::Balance) {
 		let actual = Pallet::<T>::slash_reserved(GetCurrencyId::get(), who, value);
 		(Self::NegativeImbalance::zero(), actual)
+	}
+
+	fn create_reserved(who: &T::AccountId, value: Self::Balance) -> (Self::PositiveImbalance, Self::Balance) {
+		let actual = Pallet::<T>::create_reserved(GetCurrencyId::get(), who, value);
+		(Self::PositiveImbalance::zero(), actual)
 	}
 
 	fn reserved_balance(who: &T::AccountId) -> Self::Balance {
