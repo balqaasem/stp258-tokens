@@ -56,19 +56,16 @@ use frame_support::{
 use frame_system::{ensure_signed, pallet_prelude::*};
 use stp258_traits::{
 	account::MergeAccount, GetByKey,
-	arithmetic::{self, Signed},
-	setheum_currency::{
-		BalanceStatus as Status, Currency as SetheumCurrency, 
-		LockableCurrency as SetheumLockableCurrency, 
-		ReservableCurrency as SetheumReservableCurrency
-	},
-	stp258_currency::{
-		Stp258Currency, 
-		Stp258CurrencyExtended, 
-		Stp258CurrencyReservable, 
-		Stp258CurrencyLockable,
-		LockIdentifier, OnDust, 
-	},
+	arithmetic::{self, Signed}, 
+	BalanceStatus as Status, 
+	Currency as SetheumCurrency, 
+	LockableCurrency as SetheumLockableCurrency,  
+	LockIdentifier, OnDust,
+	ReservableCurrency as SetheumReservableCurrency,
+	Stp258Currency, 
+	Stp258CurrencyExtended, 
+	Stp258CurrencyLockable,
+	Stp258CurrencyReservable, 
 };
 use sp_runtime::{
 	traits::{
