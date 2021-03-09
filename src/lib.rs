@@ -48,7 +48,6 @@ use frame_support::{
 	pallet_prelude::*, 
 	transactional,
 	traits::{
-		BalanceStatus as Status, 
 		ExistenceRequirement, Get, 
 		Imbalance, SignedImbalance, WithdrawReasons,
 
@@ -58,17 +57,18 @@ use frame_system::{ensure_signed, pallet_prelude::*};
 use stp258_traits::{
 	account::MergeAccount,
 	arithmetic::{self, Signed},
-	BalanceStatus, GetByKey, 
-	LockIdentifier, OnDust, 
-	Stp258Currency, 
-	Stp258CurrencyExtended, 
-	Stp258CurrencyReservable, 
-	Stp258CurrencyLockable,
 	setheum_currency::{
-		Currency as SetheumCurrency, 
+		BalanceStatus as Status, Currency as SetheumCurrency, 
 		LockableCurrency as SetheumLockableCurrency, 
 		ReservableCurrency as SetheumReservableCurrency
 	}
+	stp258_currency::{
+		Stp258Currency, 
+		Stp258CurrencyExtended, 
+		Stp258CurrencyReservable, 
+		Stp258CurrencyLockable,
+		LockIdentifier, OnDust, GetByKey, 
+	},
 };
 use sp_runtime::{
 	traits::{

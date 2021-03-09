@@ -203,7 +203,7 @@ parameter_type_with_key! {
 }
 
 parameter_types! {
-	pub DustAccount: AccountId = ModuleId(*b"orml/dst").into_account();
+	pub DustAccount: AccountId = ModuleId(*b"dsss/dst").into_account();
 }
 
 impl Config for Runtime {

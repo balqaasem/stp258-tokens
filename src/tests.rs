@@ -208,7 +208,7 @@ fn slash_reserved_should_work() {
 }
 
 #[test]
-fn create_reserved_should_work() {
+fn burn_reserved_should_work() {
 	ExtBuilder::default()
 		.one_hundred_for_alice_n_bob()
 		.build()
@@ -217,14 +217,33 @@ fn create_reserved_should_work() {
 			assert_eq!(Stp258Tokens::free_balance(DOT, &ALICE), 50);
 			assert_eq!(Stp258Tokens::reserved_balance(DOT, &ALICE), 50);
 			assert_eq!(Stp258Tokens::total_issuance(DOT), 200);
-			assert_eq!(Stp258Tokens::create_reserved(DOT, &ALICE, 0), 0);
+			assert_ok!(Stp258Tokens::create_reserved(DOT, &ALICE, 0));
 			assert_eq!(Stp258Tokens::free_balance(DOT, &ALICE), 50);
 			assert_eq!(Stp258Tokens::reserved_balance(DOT, &ALICE), 50);
 			assert_eq!(Stp258Tokens::total_issuance(DOT), 200);
-			assert_eq!(Stp258Tokens::create_reserved(DOT, &ALICE, 100), 50);
+			assert_ok!(Stp258Tokens::create_reserved(DOT, &ALICE, 10));
 			assert_eq!(Stp258Tokens::free_balance(DOT, &ALICE), 50);
+			assert_eq!(Stp258Tokens::reserved_balance(DOT, &ALICE), 60);
+			assert_eq!(Stp258Tokens::total_issuance(DOT), 210);
+		});
+}
+
+#[test]
+fn create_reserved_should_work() {
+	ExtBuilder::default()
+		.one_hundred_for_alice_n_bob()
+		.build()
+		.execute_with(|| {
+			assert_noop!(Stp258Tokens::reserve(DOT, &ALICE, 101), Error::<Runtime>::BalanceTooLow,);
+			assert_ok!(Stp258Tokens::reserve(DOT, &ALICE, 0));
+			assert_eq!(Stp258Tokens::free_balance(DOT, &ALICE), 100);
 			assert_eq!(Stp258Tokens::reserved_balance(DOT, &ALICE), 0);
-			assert_eq!(Stp258Tokens::total_issuance(DOT), 250);
+			assert_eq!(Stp258Tokens::total_balance(DOT, &ALICE), 100);
+			assert_ok!(Stp258Tokens::create_reserved(DOT, &ALICE, 150));
+			assert_eq!(Stp258Tokens::free_balance(DOT, &ALICE), 100);
+			assert_eq!(Stp258Tokens::reserved_balance(DOT, &ALICE), 150);
+			assert_eq!(Stp258Tokens::total_balance(DOT, &ALICE), 250);
+			assert_eq!(Stp258Tokens::total_issuance(DOT), 350);
 		});
 }
 
@@ -905,14 +924,16 @@ fn currency_adapter_slashing_incomplete_reserved_balance_should_work() {
 }
 
 #[test]
-fn currency_adapter_creating_incomplete_reserved_balance_should_work() {
+fn currency_adapter_creating_reserved_balance_should_work() {
 	ExtBuilder::default().build().execute_with(|| {
 		let _ = TreasuryCurrencyAdapter::deposit_creating(&TREASURY_ACCOUNT, 111);
 		assert_ok!(TreasuryCurrencyAdapter::reserve(&TREASURY_ACCOUNT, 42));
-		assert_eq!(TreasuryCurrencyAdapter::create_reserved(&TREASURY_ACCOUNT, 69).1, 27);
 		assert_eq!(TreasuryCurrencyAdapter::free_balance(&TREASURY_ACCOUNT), 69);
-		assert_eq!(TreasuryCurrencyAdapter::reserved_balance(&TREASURY_ACCOUNT), 0);
-		assert_eq!(TreasuryCurrencyAdapter::total_issuance(), 69);
+		assert_eq!(TreasuryCurrencyAdapter::reserved_balance(&TREASURY_ACCOUNT), 42);
+		assert_ok!(TreasuryCurrencyAdapter::create_reserved(&TREASURY_ACCOUNT, 69));
+		assert_eq!(TreasuryCurrencyAdapter::free_balance(&TREASURY_ACCOUNT), 69);
+		assert_eq!(TreasuryCurrencyAdapter::reserved_balance(&TREASURY_ACCOUNT), 111);
+		assert_eq!(TreasuryCurrencyAdapter::total_issuance(), 180);
 	});
 }
 
