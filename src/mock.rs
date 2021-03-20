@@ -9,7 +9,7 @@ use frame_support::{
 };
 use stp258_traits::parameter_type_with_key; 
 use sp_core::H256;
-use sp_runtime::{testing::Header, traits::IdentityLookup, AccountId32, Permill};
+use sp_runtime::{testing::Header, traits::IdentityLookup, AccountId32, Permill, Perbill};
 use sp_std::cell::RefCell;
 
 pub type AccountId = AccountId32;
@@ -217,6 +217,8 @@ parameter_type_with_key! {
 
 const SERP_QUOTE_MULTIPLE: Balance = 2;
 const SINGLE_UNIT: Balance = 1;
+const SERPER_RATIO: Perbill = Perbill::from_percent(25);
+const SETT_PAY_RATIO: Perbill = Perbill::from_percent(75);
 
 parameter_types! {
 	pub DustAccount: AccountId = ModuleId(*b"orml/dst").into_account();
@@ -227,6 +229,8 @@ parameter_types! {
 	pub const GetSerpQuoteMultiple: Balance = SERP_QUOTE_MULTIPLE;
 	pub const GetSettPayAcc: AccountId = SETTPAY;
 	pub const GetSingleUnit: Balance = SINGLE_UNIT;
+	pub const GetSerperRatio: Perbill = SERPER_RATIO;
+	pub const GetSettPayRatio: Perbill = SETT_PAY_RATIO;
 }
 
 impl Config for Runtime {
@@ -237,9 +241,11 @@ impl Config for Runtime {
 	type WeightInfo = ();
 	type ExistentialDeposits = ExistentialDeposits;
 	type GetBaseUnit = GetBaseUnit;
-	type GetSerperAcc = GetSerperAcc;
 	type GetSerpQuoteMultiple = GetSerpQuoteMultiple;
+	type GetSerperAcc = GetSerperAcc;
 	type GetSettPayAcc = GetSettPayAcc;
+	type GetSerperRatio = GetSerperRatio;
+	type GetSettPayRatio = GetSettPayRatio;
 	type GetSingleUnit = GetSingleUnit;
 	type OnDust = TransferDust<Runtime, DustAccount>;
 }

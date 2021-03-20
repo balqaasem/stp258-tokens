@@ -70,7 +70,7 @@ use sp_runtime::{
 		AccountIdConversion, AtLeast32BitUnsigned, Bounded, CheckedAdd, CheckedSub, MaybeSerializeDeserialize, Member,
 		Saturating, StaticLookup, Zero,
 	},
-	DispatchError, DispatchResult, ModuleId, RuntimeDebug,
+	DispatchError, DispatchResult, ModuleId, Perbill, RuntimeDebug,
 };
 use sp_std::{
 	convert::{Infallible, TryFrom, TryInto},
@@ -202,6 +202,12 @@ pub mod module {
 
 		/// The SettPay Account type
 		type GetSettPayAcc: Get<Self::AccountId>;
+
+		/// The Serpers Account type
+		type GetSerperRatio: Get<Perbill>;
+
+		/// The SettPay Account type
+		type GetSettPayRatio: Get<Perbill>;
 
 		/// The multiple number for the serp quote.
 		type GetSerpQuoteMultiple: Get<Self::Balance>;
