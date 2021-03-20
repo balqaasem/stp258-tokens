@@ -511,7 +511,6 @@ impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
 		native_currency_id: Self::CurrencyId, 
 		stable_currency_id: Self::CurrencyId, 
 		expand_by: Self::Balance, 
-		quote_price: Self::Balance, 
 		pay_by_quoted: Self::Balance, 
 		serpers: &T::AccountId,
 	) -> DispatchResult {
@@ -541,7 +540,6 @@ impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
 		native_currency_id: Self::CurrencyId, 
 		stable_currency_id: Self::CurrencyId, 
 		contract_by: Self::Balance, 
-		quote_price: Self::Balance,
 		pay_by_quoted: Self::Balance, 
 		serpers: &T::AccountId,
 	) -> DispatchResult {
