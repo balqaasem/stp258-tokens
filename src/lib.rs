@@ -200,6 +200,9 @@ pub mod module {
 		/// The Serpers Account type
 		type GetSerperAcc: Get<Self::AccountId>;
 
+		/// The multiple number for the serp quote.
+		type GetSerpQuoteMultiple: Get<Self::Balance>;
+
 		/// Handler to burn or transfer account's dust
 		type OnDust: OnDust<Self::AccountId, Self::CurrencyId, Self::Balance>;
 	}

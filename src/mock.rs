@@ -213,6 +213,7 @@ parameter_type_with_key! {
 	};
 }
 
+const SERP_QUOTE_MULTIPLE: Balance = 2;
 const SINGLE_UNIT: Balance = 1;
 
 parameter_types! {
@@ -222,6 +223,7 @@ parameter_types! {
 parameter_types! {
 	pub const GetSerperAcc: AccountId = SERPER;
 	pub const GetSingleUnit: Balance = SINGLE_UNIT;
+	pub const GetSerpQuoteMultiple: Balance = SERP_QUOTE_MULTIPLE;
 }
 
 impl Config for Runtime {
@@ -233,6 +235,7 @@ impl Config for Runtime {
 	type ExistentialDeposits = ExistentialDeposits;
 	type GetBaseUnit = GetBaseUnit;
 	type GetSerperAcc = GetSerperAcc;
+	type GetSerpQuoteMultiple = GetSerpQuoteMultiple;
 	type GetSingleUnit = GetSingleUnit;
 	type OnDust = TransferDust<Runtime, DustAccount>;
 }
