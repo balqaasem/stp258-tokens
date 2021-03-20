@@ -197,8 +197,9 @@ impl pallet_elections_phragmen::Config for Runtime {
 parameter_type_with_key! {
 	pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
 		match currency_id {
-			&JUSD => 1,
 			&DNAR => 2,
+			&SETT => 1 * 10_000,
+			&JUSD => 1 * 1_000,
 			_ => 0,
 		}
 	};
@@ -207,8 +208,8 @@ parameter_type_with_key! {
 parameter_type_with_key! {
 	pub GetBaseUnit: |currency_id: CurrencyId| -> Balance {
 		match currency_id {
-			&JUSD => 1_000,
 			&SETT => 10_000,
+			&JUSD => 1_000,
 			_ => 0,
 		}
 	};
@@ -286,10 +287,10 @@ impl ExtBuilder {
 			(BOB, DNAR, 100),
 			(SERPER, DNAR, 100),
 			(SETTPAY, DNAR, 100),
-			(ALICE, SETT, 100), 
-			(BOB, SETT, 100),
-			(SERPER, SETT, 100),
-			(SETTPAY, SETT, 100),
+			(ALICE, SETT, 100 * 10_000), 
+			(BOB, SETT, 100 * 10_000),
+			(SERPER, SETT, 100 * 10_000),
+			(SETTPAY, SETT, 100 * 10_000),
 			(ALICE, JUSD, 100 * 1_000), 
 			(BOB, JUSD, 100 * 1_000),
 			(SERPER, JUSD, 100 * 1_000),

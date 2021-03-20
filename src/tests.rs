@@ -7,11 +7,19 @@ use frame_support::{assert_noop, assert_ok};
 use mock::{Event, *};
 
 #[test]
+fn base_unit_works() {
+	ExtBuilder::default().build().execute_with(|| {
+		assert_eq!(Stp258Tokens::base_unit(SETT), 10_000);
+		assert_eq!(Stp258Tokens::base_unit(JUSD), 1_000);
+	});
+}
+
+#[test]
 fn minimum_balance_work() {
 	ExtBuilder::default().build().execute_with(|| {
-		assert_eq!(Stp258Tokens::minimum_balance(JUSD), 1);
 		assert_eq!(Stp258Tokens::minimum_balance(DNAR), 2);
-		assert_eq!(Stp258Tokens::minimum_balance(SETT), 0);
+		assert_eq!(Stp258Tokens::minimum_balance(SETT), 1 * 10_000);
+		assert_eq!(Stp258Tokens::minimum_balance(JUSD), 1 * 1_000);
 	});
 }
 
@@ -433,11 +441,11 @@ fn no_op_if_amount_is_zero() {
 #[test]
 fn merge_account_should_work() {
 	ExtBuilder::default()
-		.balances(vec![(ALICE, DNAR, 100), (ALICE, JUSD, 200)])
+		.balances(vec![(ALICE, DNAR, 100), (ALICE, JUSD, 200 * 1_000)])
 		.build()
 		.execute_with(|| {
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &ALICE), 100);
-			assert_eq!(Stp258Tokens::free_balance(JUSD, &ALICE), 200);
+			assert_eq!(Stp258Tokens::free_balance(JUSD, &ALICE), 200 * 1_000);
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &BOB), 0);
 
 			assert_ok!(Stp258Tokens::reserve(DNAR, &ALICE, 1));
@@ -449,9 +457,9 @@ fn merge_account_should_work() {
 
 			assert_ok!(Stp258Tokens::merge_account(&ALICE, &BOB));
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &ALICE), 0);
-			assert_eq!(Stp258Tokens::free_balance(JUSD, &ALICE), 0);
+			assert_eq!(Stp258Tokens::free_balance(JUSD, &ALICE), 0 * 1_000);
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &BOB), 100);
-			assert_eq!(Stp258Tokens::free_balance(JUSD, &BOB), 200);
+			assert_eq!(Stp258Tokens::free_balance(JUSD, &BOB), 200 * 1_000);
 		});
 }
 
