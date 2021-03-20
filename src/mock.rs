@@ -16,9 +16,9 @@ pub type AccountId = AccountId32;
 pub type CurrencyId = u32;
 pub type Balance = u64;
 
-pub const DOT: CurrencyId = 1;
-pub const BTC: CurrencyId = 2;
-pub const ETH: CurrencyId = 3;
+pub const DNAR: CurrencyId = 1;
+pub const JUSD: CurrencyId = 2;
+pub const SETT: CurrencyId = 3;
 pub const ALICE: AccountId = AccountId32::new([0u8; 32]);
 pub const BOB: AccountId = AccountId32::new([1u8; 32]);
 pub const TREASURY_ACCOUNT: AccountId = AccountId32::new([2u8; 32]);
@@ -96,7 +96,7 @@ parameter_types! {
 	pub const SpendPeriod: u64 = 2;
 	pub const Burn: Permill = Permill::from_percent(50);
 	pub const TreasuryModuleId: ModuleId = ModuleId(*b"py/trsry");
-	pub const GetTokenId: CurrencyId = DOT;
+	pub const GetTokenId: CurrencyId = DNAR;
 }
 
 impl pallet_treasury::Config for Runtime {
@@ -195,8 +195,18 @@ impl pallet_elections_phragmen::Config for Runtime {
 parameter_type_with_key! {
 	pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
 		match currency_id {
-			&BTC => 1,
-			&DOT => 2,
+			&JUSD => 1,
+			&DNAR => 2,
+			_ => 0,
+		}
+	};
+}
+
+parameter_type_with_key! {
+	pub GetBaseUnit: |currency_id: CurrencyId| -> Balance {
+		match currency_id {
+			&JUSD => 1_000,
+			&SETT => 1_000,
 			_ => 0,
 		}
 	};
@@ -213,6 +223,7 @@ impl Config for Runtime {
 	type CurrencyId = CurrencyId;
 	type WeightInfo = ();
 	type ExistentialDeposits = ExistentialDeposits;
+	type GetBaseUnit = GetBaseUnit;
 	type OnDust = TransferDust<Runtime, DustAccount>;
 }
 pub type TreasuryCurrencyAdapter = <Runtime as pallet_treasury::Config>::Currency;
@@ -254,12 +265,12 @@ impl ExtBuilder {
 	}
 
 	pub fn one_hundred_for_alice_n_bob(self) -> Self {
-		self.balances(vec![(ALICE, DOT, 100), (BOB, DOT, 100)])
+		self.balances(vec![(ALICE, DNAR, 100), (BOB, DNAR, 100)])
 	}
 
 	pub fn one_hundred_for_treasury_account(mut self) -> Self {
 		self.treasury_genesis = true;
-		self.balances(vec![(TREASURY_ACCOUNT, DOT, 100)])
+		self.balances(vec![(TREASURY_ACCOUNT, DNAR, 100)])
 	}
 
 	pub fn build(self) -> sp_io::TestExternalities {

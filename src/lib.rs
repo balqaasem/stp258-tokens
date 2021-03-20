@@ -190,6 +190,9 @@ pub mod module {
 
 		/// The minimum amount required to keep an account.
 		type ExistentialDeposits: GetByKey<Self::CurrencyId, Self::Balance>;
+		
+		/// The base unit of a currency
+		type GetBaseUnit: GetByKey<Self::CurrencyId, Self::Balance>;
 
 		/// Handler to burn or transfer account's dust
 		type OnDust: OnDust<Self::AccountId, Self::CurrencyId, Self::Balance>;
@@ -479,6 +482,10 @@ impl<T: Config> Stp258Currency<T::AccountId> for Pallet<T> {
 	type CurrencyId = T::CurrencyId;
 	type Balance = T::Balance;
 	
+	fn base_unit(currency_id: Self::CurrencyId) -> Self::Balance {
+		T::GetBaseUnit::get(&currency_id)
+	}
+
 	fn minimum_balance(currency_id: Self::CurrencyId) -> Self::Balance {
 		T::ExistentialDeposits::get(&currency_id)
 	}
