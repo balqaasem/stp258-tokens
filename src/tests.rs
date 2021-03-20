@@ -70,7 +70,7 @@ fn remove_dust_work() {
 #[test]
 fn set_lock_should_work() {
 	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper()
+		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
 			assert_ok!(Stp258Tokens::set_lock(ID_1, DNAR, &ALICE, 10));
@@ -89,7 +89,7 @@ fn set_lock_should_work() {
 #[test]
 fn extend_lock_should_work() {
 	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper()
+		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
 			assert_ok!(Stp258Tokens::set_lock(ID_1, DNAR, &ALICE, 10));
@@ -107,7 +107,7 @@ fn extend_lock_should_work() {
 #[test]
 fn remove_lock_should_work() {
 	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper()
+		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
 			assert_ok!(Stp258Tokens::set_lock(ID_1, DNAR, &ALICE, 10));
@@ -121,7 +121,7 @@ fn remove_lock_should_work() {
 #[test]
 fn frozen_can_limit_liquidity() {
 	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper()
+		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
 			assert_ok!(Stp258Tokens::set_lock(ID_1, DNAR, &ALICE, 90));
@@ -137,7 +137,7 @@ fn frozen_can_limit_liquidity() {
 #[test]
 fn can_reserve_is_correct() {
 	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper()
+		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
 			assert_eq!(Stp258Tokens::can_reserve(DNAR, &ALICE, 0), true);
@@ -149,7 +149,7 @@ fn can_reserve_is_correct() {
 #[test]
 fn reserve_should_work() {
 	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper()
+		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
 			assert_noop!(Stp258Tokens::reserve(DNAR, &ALICE, 101), Error::<Runtime>::BalanceTooLow,);
@@ -167,7 +167,7 @@ fn reserve_should_work() {
 #[test]
 fn unreserve_should_work() {
 	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper()
+		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &ALICE), 100);
@@ -189,28 +189,28 @@ fn unreserve_should_work() {
 #[test]
 fn slash_reserved_should_work() {
 	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper()
+		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
 			assert_ok!(Stp258Tokens::reserve(DNAR, &ALICE, 50));
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &ALICE), 50);
 			assert_eq!(Stp258Tokens::reserved_balance(DNAR, &ALICE), 50);
-			assert_eq!(Stp258Tokens::total_issuance(DNAR), 300);
+			assert_eq!(Stp258Tokens::total_issuance(DNAR), 400);
 			assert_eq!(Stp258Tokens::slash_reserved(DNAR, &ALICE, 0), 0);
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &ALICE), 50);
 			assert_eq!(Stp258Tokens::reserved_balance(DNAR, &ALICE), 50);
-			assert_eq!(Stp258Tokens::total_issuance(DNAR), 300);
+			assert_eq!(Stp258Tokens::total_issuance(DNAR), 400);
 			assert_eq!(Stp258Tokens::slash_reserved(DNAR, &ALICE, 100), 50);
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &ALICE), 50);
 			assert_eq!(Stp258Tokens::reserved_balance(DNAR, &ALICE), 0);
-			assert_eq!(Stp258Tokens::total_issuance(DNAR), 250);
+			assert_eq!(Stp258Tokens::total_issuance(DNAR), 350);
 		});
 }
 
 #[test]
 fn repatriate_reserved_should_work() {
 	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper()
+		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &ALICE), 100);
@@ -261,42 +261,42 @@ fn repatriate_reserved_should_work() {
 #[test]
 fn slash_draw_reserved_correct() {
 	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper()
+		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
 			assert_ok!(Stp258Tokens::reserve(DNAR, &ALICE, 50));
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &ALICE), 50);
 			assert_eq!(Stp258Tokens::reserved_balance(DNAR, &ALICE), 50);
-			assert_eq!(Stp258Tokens::total_issuance(DNAR), 300);
+			assert_eq!(Stp258Tokens::total_issuance(DNAR), 400);
 
 			assert_eq!(Stp258Tokens::slash(DNAR, &ALICE, 80), 0);
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &ALICE), 0);
 			assert_eq!(Stp258Tokens::reserved_balance(DNAR, &ALICE), 20);
-			assert_eq!(Stp258Tokens::total_issuance(DNAR), 220);
+			assert_eq!(Stp258Tokens::total_issuance(DNAR), 320);
 
 			assert_eq!(Stp258Tokens::slash(DNAR, &ALICE, 50), 30);
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &ALICE), 0);
 			assert_eq!(Stp258Tokens::reserved_balance(DNAR, &ALICE), 0);
-			assert_eq!(Stp258Tokens::total_issuance(DNAR), 200);
+			assert_eq!(Stp258Tokens::total_issuance(DNAR), 300);
 		});
 }
 
 #[test]
 fn genesis_issuance_should_work() {
 	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper()
+		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &ALICE), 100);
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &BOB), 100);
-			assert_eq!(Stp258Tokens::total_issuance(DNAR), 300);
+			assert_eq!(Stp258Tokens::total_issuance(DNAR), 400);
 		});
 }
 
 #[test]
 fn transfer_should_work() {
 	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper()
+		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
 			System::set_block_number(1);
@@ -304,7 +304,7 @@ fn transfer_should_work() {
 			assert_ok!(Stp258Tokens::transfer(Some(ALICE).into(), BOB, DNAR, 50));
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &ALICE), 50);
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &BOB), 150);
-			assert_eq!(Stp258Tokens::total_issuance(DNAR), 300);
+			assert_eq!(Stp258Tokens::total_issuance(DNAR), 400);
 
 			let transferred_event = Event::stp258_tokens(crate::Event::Transferred(DNAR, ALICE, BOB, 50));
 			assert!(System::events().iter().any(|record| record.event == transferred_event));
@@ -319,7 +319,7 @@ fn transfer_should_work() {
 #[test]
 fn transfer_all_should_work() {
 	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper()
+		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
 			System::set_block_number(1);
@@ -336,12 +336,12 @@ fn transfer_all_should_work() {
 #[test]
 fn deposit_should_work() {
 	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper()
+		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
 			assert_ok!(Stp258Tokens::deposit(DNAR, &ALICE, 100));
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &ALICE), 200);
-			assert_eq!(Stp258Tokens::total_issuance(DNAR), 400);
+			assert_eq!(Stp258Tokens::total_issuance(DNAR), 500);
 
 			assert_noop!(
 				Stp258Tokens::deposit(DNAR, &ALICE, Balance::max_value()),
@@ -353,12 +353,12 @@ fn deposit_should_work() {
 #[test]
 fn withdraw_should_work() {
 	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper()
+		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
 			assert_ok!(Stp258Tokens::withdraw(DNAR, &ALICE, 50));
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &ALICE), 50);
-			assert_eq!(Stp258Tokens::total_issuance(DNAR), 250);
+			assert_eq!(Stp258Tokens::total_issuance(DNAR), 350);
 
 			assert_noop!(Stp258Tokens::withdraw(DNAR, &ALICE, 60), Error::<Runtime>::BalanceTooLow);
 		});
@@ -367,34 +367,34 @@ fn withdraw_should_work() {
 #[test]
 fn slash_should_work() {
 	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper()
+		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
 			// slashed_amount < amount
 			assert_eq!(Stp258Tokens::slash(DNAR, &ALICE, 50), 0);
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &ALICE), 50);
-			assert_eq!(Stp258Tokens::total_issuance(DNAR), 250);
+			assert_eq!(Stp258Tokens::total_issuance(DNAR), 350);
 
 			// slashed_amount == amount
 			assert_eq!(Stp258Tokens::slash(DNAR, &ALICE, 51), 1);
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &ALICE), 0);
-			assert_eq!(Stp258Tokens::total_issuance(DNAR), 200);
+			assert_eq!(Stp258Tokens::total_issuance(DNAR), 300);
 		});
 }
 
 #[test]
 fn update_balance_should_work() {
 	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper()
+		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
 			assert_ok!(Stp258Tokens::update_balance(DNAR, &ALICE, 50));
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &ALICE), 150);
-			assert_eq!(Stp258Tokens::total_issuance(DNAR), 350);
+			assert_eq!(Stp258Tokens::total_issuance(DNAR), 450);
 
 			assert_ok!(Stp258Tokens::update_balance(DNAR, &BOB, -50));
 			assert_eq!(Stp258Tokens::free_balance(DNAR, &BOB), 50);
-			assert_eq!(Stp258Tokens::total_issuance(DNAR), 300);
+			assert_eq!(Stp258Tokens::total_issuance(DNAR), 400);
 
 			assert_noop!(Stp258Tokens::update_balance(DNAR, &BOB, -60), Error::<Runtime>::BalanceTooLow);
 		});
@@ -403,7 +403,7 @@ fn update_balance_should_work() {
 #[test]
 fn ensure_can_withdraw_should_work() {
 	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper()
+		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
 			assert_noop!(

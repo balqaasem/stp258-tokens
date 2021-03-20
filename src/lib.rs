@@ -200,6 +200,9 @@ pub mod module {
 		/// The Serpers Account type
 		type GetSerperAcc: Get<Self::AccountId>;
 
+		/// The SettPay Account type
+		type GetSettPayAcc: Get<Self::AccountId>;
+
 		/// The multiple number for the serp quote.
 		type GetSerpQuoteMultiple: Get<Self::Balance>;
 

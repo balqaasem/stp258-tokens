@@ -21,7 +21,8 @@ pub const JUSD: CurrencyId = 2;
 pub const SETT: CurrencyId = 3;
 pub const ALICE: AccountId = AccountId32::new([0u8; 32]);
 pub const BOB: AccountId = AccountId32::new([1u8; 32]);
-pub const SERPER: AccountId = AccountId32::new([2u8; 32]);
+pub const SERPER: AccountId = AccountId32::new([3u8; 32]);
+pub const SETTPAY: AccountId = AccountId32::new([4u8; 32]);
 pub const TREASURY_ACCOUNT: AccountId = AccountId32::new([2u8; 32]);
 pub const ID_1: LockIdentifier = *b"1       ";
 pub const ID_2: LockIdentifier = *b"2       ";
@@ -222,8 +223,9 @@ parameter_types! {
 
 parameter_types! {
 	pub const GetSerperAcc: AccountId = SERPER;
-	pub const GetSingleUnit: Balance = SINGLE_UNIT;
 	pub const GetSerpQuoteMultiple: Balance = SERP_QUOTE_MULTIPLE;
+	pub const GetSettPayAcc: AccountId = SETTPAY;
+	pub const GetSingleUnit: Balance = SINGLE_UNIT;
 }
 
 impl Config for Runtime {
@@ -236,6 +238,7 @@ impl Config for Runtime {
 	type GetBaseUnit = GetBaseUnit;
 	type GetSerperAcc = GetSerperAcc;
 	type GetSerpQuoteMultiple = GetSerpQuoteMultiple;
+	type GetSettPayAcc = GetSettPayAcc;
 	type GetSingleUnit = GetSingleUnit;
 	type OnDust = TransferDust<Runtime, DustAccount>;
 }
@@ -277,17 +280,20 @@ impl ExtBuilder {
 		self
 	}
 
-	pub fn one_hundred_for_alice_n_bob_n_serper(self) -> Self {
+	pub fn one_hundred_for_alice_n_bob_n_serper_n_settpay(self) -> Self {
 		self.balances(vec![
 			(ALICE, DNAR, 100), 
 			(BOB, DNAR, 100),
 			(SERPER, DNAR, 100),
+			(SETTPAY, DNAR, 100),
 			(ALICE, SETT, 100), 
 			(BOB, SETT, 100),
 			(SERPER, SETT, 100),
+			(SETTPAY, SETT, 100),
 			(ALICE, JUSD, 100), 
 			(BOB, JUSD, 100),
 			(SERPER, JUSD, 100),
+			(SETTPAY, JUSD, 100),
 			])
 	}
 
