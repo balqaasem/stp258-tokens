@@ -190,9 +190,12 @@ pub mod module {
 
 		/// The minimum amount required to keep an account.
 		type ExistentialDeposits: GetByKey<Self::CurrencyId, Self::Balance>;
-		
+
 		/// The base unit of a currency
 		type GetBaseUnit: GetByKey<Self::CurrencyId, Self::Balance>;
+
+		/// The base unit of a currency
+		type GetSingleUnit: Get<Self::Balance>;
 
 		/// Handler to burn or transfer account's dust
 		type OnDust: OnDust<Self::AccountId, Self::CurrencyId, Self::Balance>;

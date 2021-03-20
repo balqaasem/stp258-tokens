@@ -213,8 +213,14 @@ parameter_type_with_key! {
 	};
 }
 
+const SINGLE_UNIT: Balance = 1;
+
 parameter_types! {
 	pub DustAccount: AccountId = ModuleId(*b"orml/dst").into_account();
+}
+
+parameter_types! {
+	pub const GetSingleUnit: Balance = SINGLE_UNIT;
 }
 
 impl Config for Runtime {
@@ -225,6 +231,7 @@ impl Config for Runtime {
 	type WeightInfo = ();
 	type ExistentialDeposits = ExistentialDeposits;
 	type GetBaseUnit = GetBaseUnit;
+	type GetSingleUnit = GetSingleUnit;
 	type OnDust = TransferDust<Runtime, DustAccount>;
 }
 pub type TreasuryCurrencyAdapter = <Runtime as pallet_treasury::Config>::Currency;
