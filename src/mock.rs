@@ -208,7 +208,7 @@ parameter_type_with_key! {
 	pub GetBaseUnit: |currency_id: CurrencyId| -> Balance {
 		match currency_id {
 			&JUSD => 1_000,
-			&SETT => 1_000,
+			&SETT => 10_000,
 			_ => 0,
 		}
 	};
@@ -290,10 +290,10 @@ impl ExtBuilder {
 			(BOB, SETT, 100),
 			(SERPER, SETT, 100),
 			(SETTPAY, SETT, 100),
-			(ALICE, JUSD, 100), 
-			(BOB, JUSD, 100),
-			(SERPER, JUSD, 100),
-			(SETTPAY, JUSD, 100),
+			(ALICE, JUSD, 100 * 1_000), 
+			(BOB, JUSD, 100 * 1_000),
+			(SERPER, JUSD, 100 * 1_000),
+			(SETTPAY, JUSD, 100 * 1_000),
 			])
 	}
 
