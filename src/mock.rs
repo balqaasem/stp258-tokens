@@ -21,6 +21,7 @@ pub const JUSD: CurrencyId = 2;
 pub const SETT: CurrencyId = 3;
 pub const ALICE: AccountId = AccountId32::new([0u8; 32]);
 pub const BOB: AccountId = AccountId32::new([1u8; 32]);
+pub const SERPER: AccountId = AccountId32::new([2u8; 32]);
 pub const TREASURY_ACCOUNT: AccountId = AccountId32::new([2u8; 32]);
 pub const ID_1: LockIdentifier = *b"1       ";
 pub const ID_2: LockIdentifier = *b"2       ";
@@ -264,8 +265,18 @@ impl ExtBuilder {
 		self
 	}
 
-	pub fn one_hundred_for_alice_n_bob(self) -> Self {
-		self.balances(vec![(ALICE, DNAR, 100), (BOB, DNAR, 100)])
+	pub fn one_hundred_for_alice_n_bob_n_serper(self) -> Self {
+		self.balances(vec![
+			(ALICE, DNAR, 100), 
+			(BOB, DNAR, 100),
+			(SERPER, DNAR, 100),
+			(ALICE, SETT, 100), 
+			(BOB, SETT, 100),
+			(SERPER, SETT, 100),
+			(ALICE, JUSD, 100), 
+			(BOB, JUSD, 100),
+			(SERPER, JUSD, 100),
+			])
 	}
 
 	pub fn one_hundred_for_treasury_account(mut self) -> Self {
