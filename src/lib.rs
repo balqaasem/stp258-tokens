@@ -507,32 +507,23 @@ impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
 	/// `new_supply`. `quote_price` is the price ( relative to the settcurrency) of 
 	/// the `native_currency` used to expand settcurrency supply.
 	/// `who` is the account to serp with.
-	fn expand_supply(native_currency_id: Self::CurrencyId, stable_currency_id: Self::CurrencyId, expand_by: Self::Balance, quote_price: Self::Balance) -> DispatchResult {
+	fn expand_supply(
+		native_currency_id: Self::CurrencyId, 
+		stable_currency_id: Self::CurrencyId, 
+		expand_by: Self::Balance, 
+		quote_price: Self::Balance, 
+		pay_by_quoted: Self::Balance, 
+		serpers: &T::AccountId,
+	) -> DispatchResult {
 		if expand_by.is_zero() {
 			return Ok(());
 		}
 
-		let serper = &T::GetSerperAcc::get();
+		let native_account = Self::accounts(serpers, native_currency_id);
+		let stable_account = Self::accounts(serpers, stable_currency_id);
 
-		let native_account = Self::accounts(serper, native_currency_id);
-
-		let stable_account = Self::accounts(serper, stable_currency_id);
-
-		let base_unit = <Self as Stp258Currency<_>>::base_unit(stable_currency_id);
-
-		let supply = <Self as Stp258Currency<_>>::total_issuance(stable_currency_id);
-		let new_supply = supply.saturating_add(expand_by);
-        let serp_quote_multiple = T::GetSerpQuoteMultiple::get();
-		let defloated = new_supply * base_unit;
-		let new_base_price = defloated / supply;
-		let fractioned = new_base_price - base_unit;
-		let quotation = fractioned * serp_quote_multiple;
-		let serp_quoted_price = new_base_price.saturating_sub(quotation);
-		let relative_price = quote_price / serp_quoted_price;
-		let pay_by_quoted = expand_by / relative_price;
-
-		Self::set_reserved_balance(native_currency_id, serper, native_account.reserved - pay_by_quoted);
-		Self::set_reserved_balance(stable_currency_id, serper, stable_account.reserved + expand_by);
+		Self::set_reserved_balance(native_currency_id, serpers, native_account.reserved - pay_by_quoted);
+		Self::set_reserved_balance(stable_currency_id, serpers, stable_account.reserved + expand_by);
 
 		<TotalIssuance<T>>::mutate(native_currency_id, |v| *v -= pay_by_quoted);
 		<TotalIssuance<T>>::mutate(stable_currency_id, |v| *v += expand_by);
@@ -546,41 +537,26 @@ impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
 	/// and update `new_supply`. `quote_price` is the price ( relative to the settcurrency) of 
 	/// the `native_currency` used to contract settcurrency supply.
 	/// `who` is the account to serp with.
-	fn contract_supply(native_currency_id: Self::CurrencyId, stable_currency_id: Self::CurrencyId, contract_by: Self::Balance, quote_price: Self::Balance) -> DispatchResult{
+	fn contract_supply(
+		native_currency_id: Self::CurrencyId, 
+		stable_currency_id: Self::CurrencyId, 
+		contract_by: Self::Balance, 
+		quote_price: Self::Balance,
+		pay_by_quoted: Self::Balance, 
+		serpers: &T::AccountId,
+	) -> DispatchResult {
 		if contract_by.is_zero() {
 			return Ok(());
 		}
 
-		let serper = &T::GetSerperAcc::get();
+		let native_account = Self::accounts(serpers, native_currency_id);
+		let stable_account = Self::accounts(serpers, stable_currency_id);
 
-		let native_account = Self::accounts(serper, native_currency_id);
+		Self::set_reserved_balance(native_currency_id, serpers, native_account.reserved - pay_by_quoted);
+		Self::set_reserved_balance(stable_currency_id, serpers, stable_account.reserved + contract_by);
 
-		let stable_account = Self::accounts(serper, stable_currency_id);
-
-		let supply = <Self as Stp258Currency<_>>::total_issuance(stable_currency_id);
-		let new_supply = supply.saturating_sub(contract_by);
-		let base_unit = <Self as Stp258Currency<_>>::base_unit(stable_currency_id);
-        let serp_quote_multiple = T::GetSerpQuoteMultiple::get();
-		let defloated = new_supply * base_unit;
-		let new_base_price = defloated / supply;
-		let fractioned = base_unit - new_base_price;
-		let quotation = fractioned * serp_quote_multiple;
-		let serp_quoted_price = quotation + new_base_price;
-		let relative_price = serp_quoted_price / quote_price;
-		let defloated_by_quoted = relative_price * contract_by;
-		let pay_by_quoted = defloated_by_quoted / base_unit;
-		
 		<TotalIssuance<T>>::mutate(stable_currency_id, |v| *v -= contract_by);
-		Self::set_reserved_balance(stable_currency_id, serper, stable_account.reserved -  contract_by);
-
-		TotalIssuance::<T>::try_mutate(native_currency_id, |total_issuance| -> DispatchResult {
-			*total_issuance = total_issuance
-				.checked_add(&pay_by_quoted)
-				.ok_or(Error::<T>::TotalIssuanceOverflow)?;
-
-			Self::set_reserved_balance(native_currency_id, serper, native_account.reserved + pay_by_quoted);
-			Ok(())
-		});
+		<TotalIssuance<T>>::mutate(native_currency_id, |v| *v += pay_by_quoted);
 
 		Ok(())
 	}
