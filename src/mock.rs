@@ -220,6 +220,7 @@ parameter_types! {
 }
 
 parameter_types! {
+	pub const GetSerperAcc: AccountId = SERPER;
 	pub const GetSingleUnit: Balance = SINGLE_UNIT;
 }
 
@@ -231,6 +232,7 @@ impl Config for Runtime {
 	type WeightInfo = ();
 	type ExistentialDeposits = ExistentialDeposits;
 	type GetBaseUnit = GetBaseUnit;
+	type GetSerperAcc = GetSerperAcc;
 	type GetSingleUnit = GetSingleUnit;
 	type OnDust = TransferDust<Runtime, DustAccount>;
 }

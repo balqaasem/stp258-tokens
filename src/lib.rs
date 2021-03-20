@@ -197,6 +197,9 @@ pub mod module {
 		/// The base unit of a currency
 		type GetSingleUnit: Get<Self::Balance>;
 
+		/// The Serpers Account type
+		type GetSerperAcc: Get<Self::AccountId>;
+
 		/// Handler to burn or transfer account's dust
 		type OnDust: OnDust<Self::AccountId, Self::CurrencyId, Self::Balance>;
 	}
