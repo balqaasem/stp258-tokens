@@ -31,11 +31,11 @@ fn expand_supply_should_work() {
 		.execute_with(|| {
 			assert_ok!(Stp258Tokens::reserve(DNAR, &SERPER, 100));
 			assert_ok!(Stp258Tokens::reserve(JUSD, &SERPER, 100 * 1_000));
-			assert_eq!(Stp258Tokens::reserved_balance(DNAR, &ALICE), 100);
-			assert_eq!(Stp258Tokens::reserved_balance(JUSD, &ALICE), 100 * 1_000);
+			assert_eq!(Stp258Tokens::reserved_balance(DNAR, &SERPER), 100);
+			assert_eq!(Stp258Tokens::reserved_balance(JUSD, &SERPER), 100 * 1_000);
 			assert_eq!(Stp258Tokens::total_issuance(DNAR), 400);
 			assert_eq!(Stp258Tokens::total_issuance(JUSD), 400 * 1_000);
-			assert_ok!(Stp258Tokens::expand_supply(DNAR, JUSD, 40, 18_000, 2, &SERPER)); 
+			assert_ok!(Stp258Tokens::expand_supply(DNAR, JUSD, 40 * 1_000, 2, &SERPER)); 
 			assert_eq!(Stp258Tokens::reserved_balance(JUSD, &SERPER), 140 * 1_000);
 			assert_eq!(Stp258Tokens::reserved_balance(DNAR, &SERPER), 98);
 			assert_eq!(Stp258Tokens::total_issuance(JUSD), 440 * 1_000);
@@ -50,11 +50,11 @@ fn contract_supply_should_work() {
 		.execute_with(|| {
 			assert_ok!(Stp258Tokens::reserve(DNAR, &SERPER, 100));
 			assert_ok!(Stp258Tokens::reserve(JUSD, &SERPER, 100 * 1_000));
-			assert_eq!(Stp258Tokens::reserved_balance(DNAR, &ALICE), 100);
-			assert_eq!(Stp258Tokens::reserved_balance(JUSD, &ALICE), 100 * 1_000);
+			assert_eq!(Stp258Tokens::reserved_balance(DNAR, &SERPER), 100);
+			assert_eq!(Stp258Tokens::reserved_balance(JUSD, &SERPER), 100 * 1_000);
 			assert_eq!(Stp258Tokens::total_issuance(DNAR), 400);
 			assert_eq!(Stp258Tokens::total_issuance(JUSD), 400 * 1_000);
-			assert_ok!(Stp258Tokens::contract_supply(DNAR, JUSD, 40, 11, 4, &SERPER)); 
+			assert_ok!(Stp258Tokens::contract_supply(DNAR, JUSD, 40 * 1_000, 4, &SERPER)); 
 			assert_eq!(Stp258Tokens::reserved_balance(JUSD, &SERPER), 60 * 1_000);
 			assert_eq!(Stp258Tokens::reserved_balance(DNAR, &SERPER), 104);
 			assert_eq!(Stp258Tokens::total_issuance(JUSD), 360 * 1_000);

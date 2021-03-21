@@ -550,8 +550,8 @@ impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
 		let native_account = Self::accounts(serpers, native_currency_id);
 		let stable_account = Self::accounts(serpers, stable_currency_id);
 
-		Self::set_reserved_balance(native_currency_id, serpers, native_account.reserved - pay_by_quoted);
-		Self::set_reserved_balance(stable_currency_id, serpers, stable_account.reserved + contract_by);
+		Self::set_reserved_balance(native_currency_id, serpers, native_account.reserved + pay_by_quoted);
+		Self::set_reserved_balance(stable_currency_id, serpers, stable_account.reserved - contract_by);
 
 		<TotalIssuance<T>>::mutate(stable_currency_id, |v| *v -= contract_by);
 		<TotalIssuance<T>>::mutate(native_currency_id, |v| *v += pay_by_quoted);
