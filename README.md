@@ -17,5 +17,3 @@ The stp258 module provides functions for:
 ## Acknowledgement & Reference
 
 This Pallet is inspired by the [ORML Tokens](https://github.com/open-web3-stack/open-runtime-module-library/blob/master/tokens) Pallet developed by [Open Web3 Stack](https://github.com/open-web3-stack/), for reference check [The ORML Repo](https://github.com/open-web3-stack/open-runtime-module-library).
-
-This Pallet is inspired by the [Stablecoin](https://github.com/apopiak/stablecoin) Pallet developed by [Alexander Popiak](https://github.com/apopiak), for reference check [The Apopiak/Stablecoin Repo](https://github.com/apopiak/stablecoin).
