@@ -60,6 +60,7 @@ use stp258_traits::{
 	arithmetic::{self, Signed},
 	BalanceStatus, GetByKey, 
 	LockIdentifier, OnDust, 
+	SerpMarket,
 	Stp258Currency, 
 	Stp258CurrencyExtended, 
 	Stp258CurrencyReservable,
@@ -70,7 +71,7 @@ use sp_runtime::{
 		AccountIdConversion, AtLeast32BitUnsigned, Bounded, CheckedAdd, CheckedSub, MaybeSerializeDeserialize, Member,
 		Saturating, StaticLookup, Zero,
 	},
-	DispatchError, DispatchResult, ModuleId, RuntimeDebug,
+	DispatchError, DispatchResult, ModuleId, Perbill, RuntimeDebug,
 };
 use sp_std::{
 	convert::{Infallible, TryFrom, TryInto},
@@ -190,6 +191,27 @@ pub mod module {
 
 		/// The minimum amount required to keep an account.
 		type ExistentialDeposits: GetByKey<Self::CurrencyId, Self::Balance>;
+
+		/// The base unit of a currency
+		type GetBaseUnit: GetByKey<Self::CurrencyId, Self::Balance>;
+
+		/// The base unit of a currency
+		type GetSingleUnit: Get<Self::Balance>;
+
+		/// The Serpers Account type
+		type GetSerperAcc: Get<Self::AccountId>;
+
+		/// The SettPay Account type
+		type GetSettPayAcc: Get<Self::AccountId>;
+
+		/// The Serpers Account type
+		type GetSerperRatio: Get<Perbill>;
+
+		/// The SettPay Account type
+		type GetSettPayRatio: Get<Perbill>;
+
+		/// The multiple number for the serp quote.
+		type GetSerpQuoteMultiple: Get<Self::Balance>;
 
 		/// Handler to burn or transfer account's dust
 		type OnDust: OnDust<Self::AccountId, Self::CurrencyId, Self::Balance>;
@@ -475,10 +497,77 @@ impl<T: Config> Pallet<T> {
 	}
 }
 
+impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
+	type CurrencyId = T::CurrencyId;
+	type Balance = T::Balance;
+
+	/// Called when `expand_supply` is received from the SERP.
+	/// Implementation should `deposit` the `amount` to `serpup_to`, 
+	/// then `amount` will be slashed from `serpup_from` and update
+	/// `new_supply`. `quote_price` is the price ( relative to the settcurrency) of 
+	/// the `native_currency` used to expand settcurrency supply.
+	/// `who` is the account to serp with.
+	fn expand_supply(
+		native_currency_id: Self::CurrencyId, 
+		stable_currency_id: Self::CurrencyId, 
+		expand_by: Self::Balance, 
+		pay_by_quoted: Self::Balance, 
+		serpers: &T::AccountId,
+	) -> DispatchResult {
+		if expand_by.is_zero() {
+			return Ok(());
+		}
+
+		let native_account = Self::accounts(serpers, native_currency_id);
+		let stable_account = Self::accounts(serpers, stable_currency_id);
+
+		Self::set_reserved_balance(native_currency_id, serpers, native_account.reserved - pay_by_quoted);
+		Self::set_reserved_balance(stable_currency_id, serpers, stable_account.reserved + expand_by);
+
+		<TotalIssuance<T>>::mutate(native_currency_id, |v| *v -= pay_by_quoted);
+		<TotalIssuance<T>>::mutate(stable_currency_id, |v| *v += expand_by);
+		
+		Ok(())
+	}
+
+	/// Called when `contract_supply` is received from the SERP.
+	/// Implementation should `deposit` the `base_currency_id` (The Native Currency) 
+	/// of `amount` to `serpup_to`, then `amount` will be slashed from `serpup_from` 
+	/// and update `new_supply`. `quote_price` is the price ( relative to the settcurrency) of 
+	/// the `native_currency` used to contract settcurrency supply.
+	/// `who` is the account to serp with.
+	fn contract_supply(
+		native_currency_id: Self::CurrencyId, 
+		stable_currency_id: Self::CurrencyId, 
+		contract_by: Self::Balance, 
+		pay_by_quoted: Self::Balance, 
+		serpers: &T::AccountId,
+	) -> DispatchResult {
+		if contract_by.is_zero() {
+			return Ok(());
+		}
+
+		let native_account = Self::accounts(serpers, native_currency_id);
+		let stable_account = Self::accounts(serpers, stable_currency_id);
+
+		Self::set_reserved_balance(native_currency_id, serpers, native_account.reserved + pay_by_quoted);
+		Self::set_reserved_balance(stable_currency_id, serpers, stable_account.reserved - contract_by);
+
+		<TotalIssuance<T>>::mutate(stable_currency_id, |v| *v -= contract_by);
+		<TotalIssuance<T>>::mutate(native_currency_id, |v| *v += pay_by_quoted);
+
+		Ok(())
+	}
+}
+
 impl<T: Config> Stp258Currency<T::AccountId> for Pallet<T> {
 	type CurrencyId = T::CurrencyId;
 	type Balance = T::Balance;
 	
+	fn base_unit(currency_id: Self::CurrencyId) -> Self::Balance {
+		T::GetBaseUnit::get(&currency_id)
+	}
+
 	fn minimum_balance(currency_id: Self::CurrencyId) -> Self::Balance {
 		T::ExistentialDeposits::get(&currency_id)
 	}
