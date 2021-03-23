@@ -14,7 +14,6 @@ The stp258 module provides functions for:
 - Slashing an account balance.
 - Minting and Burning currencies.
 - Expanding and Contracting Supply of Currencies by Serping
-- Fetching prices for currencies.
 ## Acknowledgement & Reference
 
 This Pallet is inspired by the [ORML Tokens](https://github.com/open-web3-stack/open-runtime-module-library/blob/master/tokens) Pallet developed by [Open Web3 Stack](https://github.com/open-web3-stack/), for reference check [The ORML Repo](https://github.com/open-web3-stack/open-runtime-module-library).
