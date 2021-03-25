@@ -498,8 +498,8 @@ impl<T: Config> Pallet<T> {
 }
 
 impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
-	///
-	/// Called when `expand_supply` is received from the SERP.
+	/// Called when `expand_supply` is received from the SERP by the SerpTes 
+	/// through the `on_expand_supply` trigger.
 	/// Implementation should `deposit` the `amount` to `serpup_to`, 
 	/// then `amount` will be slashed from `serpup_from` and update
 	/// `new_supply`. `quote_price` is the price ( relative to the settcurrency) of 
@@ -528,7 +528,8 @@ impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
 		Ok(())
 	}
 
-	/// Called when `contract_supply` is received from the SERP.
+	/// Called when `contract_supply` is received from the SERP by the SerpTes 
+	/// through the `on_contract_supply` trigger.
 	/// Implementation should `deposit` the `base_currency_id` (The Native Currency) 
 	/// of `amount` to `serpup_to`, then `amount` will be slashed from `serpup_from` 
 	/// and update `new_supply`. `quote_price` is the price ( relative to the settcurrency) of 
