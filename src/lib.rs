@@ -498,29 +498,7 @@ impl<T: Config> Pallet<T> {
 }
 
 impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
-	type CurrencyId = T::CurrencyId;
-	type Balance = T::Balance;
-
-    /// On Expand Supply, this is going to call `expand_supply`.
-	/// This is often called by the `serp_elast` from the `SerpTes` trait.
 	///
-	fn on_expand_supply(
-		currency_id: Self::CurrencyId, 
-		expand_by: Self::Balance, 
-		quote_price: Self::Balance, 
-	) -> Self::Balance {
-        let native_currency_id = T::GetSerpNativeId::get();
-        let serpers = &T::GetSerperAcc::get();
-        let pay_by_quoted = Self::pay_serpup_by_quoted(
-            currency_id, expand_by, quote_price,
-        );
-        Self::expand_supply(
-            native_currency_id, currency_id, expand_by, pay_by_quoted, serpers,
-        );                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-        Self::deposit_event(Event::SerpedUpSupply(currency_id, expand_by));
-        Ok(().into())
-    }
-
 	/// Called when `expand_supply` is received from the SERP.
 	/// Implementation should `deposit` the `amount` to `serpup_to`, 
 	/// then `amount` will be slashed from `serpup_from` and update
@@ -549,26 +527,6 @@ impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
 		
 		Ok(())
 	}
-
-    /// On Contract Supply, this is going to call `contract_supply`.
-	/// This is often called by the `serp_elast` from the `SerpTes` trait.
-	///
-    fn on_contract_supply(
-		currency_id: Self::CurrencyId, 
-		contract_by: Self::Balance, 
-		quote_price: Self::Balance, 
-	) -> Self::Balance {
-        let native_currency_id = T::GetSerpNativeId::get();
-        let serpers = &T::GetSerperAcc::get();
-        let pay_by_quoted = Self::pay_serpdown_by_quoted(
-            currency_id, contract_by, quote_price,
-        );
-        Self::contract_supply(
-            native_currency_id, currency_id, contract_by, pay_by_quoted, serpers,
-        );                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-        Self::deposit_event(Event::SerpedUpSupply(currency_id, contract_by));
-        Ok(().into())
-    }
 
 	/// Called when `contract_supply` is received from the SERP.
 	/// Implementation should `deposit` the `base_currency_id` (The Native Currency) 
@@ -612,17 +570,17 @@ impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
 		expand_by: Self::Balance, 
 		quote_price: Self::Balance, 
 	) -> Self::Balance {
-        let supply = T::Stp258Currency::total_issuance(currency_id);
+        let supply = <Self as Stp258Currency<T::AccountId>>::total_issuance(currency_id);
 		let new_supply = supply.saturating_add(expand_by);
-		let base_unit = T::GetBaseUnit:get();
+		let base_unit = <Self as Stp258Currency<T::AccountId>>::base_unit(currency_id);
         let serp_quote_multiple = T::GetSerpQuoteMultiple::get();
-		let defloated = new_supply.saturating_mul_int(base_unit);
-		let new_base_price = defloated.saturating_div_int(supply);
+		let defloated = new_supply.saturating_mul(base_unit);
+		let new_base_price = defloated / supply;
 		let fractioned = new_base_price.saturating_sub(base_unit);
-		let quotation = fractioned.saturating_mul_int(serp_quote_multiple);
-		let serp_quoted_price = new_base_price.saturating_sub(quotation);;
-		let relative_price = quote_price.saturating_div_int(serp_quoted_price as Self::Balance).to_num::<Self::Balance>();
-		let pay_by_quoted = expand_by.saturating_div_int(relative_price);
+		let quotation = fractioned.saturating_mul(serp_quote_multiple);
+		let serp_quoted_price = new_base_price.saturating_sub(quotation);
+		let relative_price = quote_price / serp_quoted_price as Self::Balance;
+		let pay_by_quoted = expand_by / relative_price;
 		pay_by_quoted
 	}
 
@@ -639,18 +597,18 @@ impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
 		contract_by: Self::Balance, 
 		quote_price: Self::Balance, 
 	) -> Self::Balance {
-        let supply = T::Stp258Currency::total_issuance(currency_id);
+         let supply = <Self as Stp258Currency<T::AccountId>>::total_issuance(currency_id);
 		let new_supply = supply.saturating_sub(contract_by);
-		let base_unit = T::GetBaseUnit:get();
+		let base_unit = <Self as Stp258Currency<T::AccountId>>::base_unit(currency_id);
         let serp_quote_multiple = T::GetSerpQuoteMultiple::get();
-		let defloated = new_supply.saturating_mul_int(base_unit);
-		let new_base_price = defloated.saturating_div_int(supply);
+		let defloated = new_supply.saturating_mul(base_unit);
+		let new_base_price = defloated / supply;
 		let fractioned = base_unit.saturating_sub(new_base_price);
-		let quotation = fractioned.saturating_mul_int(serp_quote_multiple);
+		let quotation = fractioned.saturating_mul(serp_quote_multiple);
 		let serp_quoted_price = quotation.saturating_add(new_base_price);
-		let relative_price = serp_quoted_price.saturating_div_int(quote_price as Self::Balance).to_num::<Self::Balance>();
-		let defloated_by_quoted = relative_price.saturating_mul_int(contract_by);
-		let pay_by_quoted = defloated_by_quoted.saturating_div_int(base_unit);
+		let relative_price = serp_quoted_price / quote_price as Self::Balance;
+		let defloated_by_quoted = relative_price.saturating_mul(contract_by);
+		let pay_by_quoted = defloated_by_quoted / base_unit;
 		pay_by_quoted
 	}
 }

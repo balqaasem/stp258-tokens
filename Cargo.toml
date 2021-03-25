@@ -5,7 +5,7 @@ edition = "2018"
 homepage = "https://setheum.xyz"
 license = "Apache-2.0 License"
 name = "stp258-tokens"
-version = "0.5.1-dev"
+version = "0.5.2"
 repository = "https://github.com/Setheum-Labs/Setheum/"
 
 [dependencies]
@@ -15,7 +15,7 @@ sp-runtime = { version = "3.0.0", default-features = false }
 sp-std = { version = "3.0.0", default-features = false }
 frame-support = { version = "3.0.0", default-features = false }
 frame-system = { version = "3.0.0", default-features = false }
-stp258-traits = { version = '0.5.1', git = "https://github.com/Setheum-Labs/stp258-traits", branch = "pretty-messy-quoted" }
+stp258-traits = { version = '0.5.2', git = "https://github.com/Setheum-Labs/stp258-traits", branch = "recall" }
 
 funty = { version = "1.1.0", default-features = false } # https://github.com/bitvecto-rs/bitvec/issues/105
 
