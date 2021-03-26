@@ -577,44 +577,6 @@ impl<T: Config> SerpTes<T::AccountId> for Pallet<T> {
 		}
 		Ok(())
 	}
-
-    /// On Expand Supply, this is going to call `expand_supply`.
-	/// This is often called by the `serp_elast` from the `SerpTes` trait.
-	///
-	fn on_expand_supply(
-		stable_currency_id: Self::CurrencyId, 
-		expand_by: Self::Balance, 
-		quote_price: Self::Balance, 
-	) -> DispatchResult {
-		if expand_by.is_zero() {
-			return Ok(());
-		}
-        let native_currency_id = T::GetSerpNativeId::get();
-        <Self as SerpMarket<T::AccountId>>::expand_supply(
-           native_currency_id, stable_currency_id, expand_by, quote_price,
-        ).map_err(|_| Error::<T>::SerpUpFailed)?;                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
-        Self::deposit_event(Event::SerpedUpSupply(stable_currency_id, expand_by));
-        Ok(().into())
-    }
-
-    /// On Contract Supply, this is going to call `contract_supply`.
-	/// This is often called by the `serp_elast` from the `SerpTes` trait.
-	///
-    fn on_contract_supply(
-		stable_currency_id: Self::CurrencyId, 
-		contract_by: Self::Balance, 
-		quote_price: Self::Balance, 
-	) -> DispatchResult {
-		if contract_by.is_zero() {
-			return Ok(());
-		}
-        let native_currency_id = T::GetSerpNativeId::get();
-        <Self as SerpMarket<T::AccountId>>::contract_supply(
-            native_currency_id, stable_currency_id, contract_by, quote_price,
-        ).map_err(|_| Error::<T>::SerpDownFailed)?;                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-        Self::deposit_event(Event::SerpedDownSupply(stable_currency_id, contract_by));
-        Ok(().into())
-    }
 }
 
 impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
@@ -637,14 +599,15 @@ impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
 		}
 		
 		let supply = <Self as Stp258Currency<T::AccountId>>::total_issuance(stable_currency_id);
-		let base_unit = <Self as Stp258Currency<T::AccountId>>::base_unit(stable_currency_id);
         let serp_quote_multiple = T::GetSerpQuoteMultiple::get();
+		let base_unit = <Self as Stp258Currency<T::AccountId>>::base_unit(stable_currency_id);
 		let percent = T::GetPercent::get();
-        let supplex = supply.checked_div(&expand_by).unwrap_or(supply / expand_by);
-        let quote = supplex.checked_mul(&serp_quote_multiple).unwrap_or(supplex * serp_quote_multiple);
-		let percented = quote_price.checked_div(&percent).unwrap_or(quote_price / percent);
-		let percented_nom = percent.checked_sub(&quote).unwrap_or(percent - quote);
-		let by_quoted = percented_nom.checked_mul(&percented).unwrap_or(percented_nom * percented);
+        let supply_change = supply.checked_div(&expand_by).unwrap_or(supply / expand_by);
+        let quote = supply_change.checked_mul(&serp_quote_multiple).unwrap_or(supply_change * serp_quote_multiple);
+		let percented_nom = quote_price.checked_div(&percent).unwrap_or(quote_price / percent);
+
+		let grouped_quote = percent.checked_sub(&quote).unwrap_or(percent - quote);
+		let by_quoted = percented_nom.checked_mul(&grouped_quote).unwrap_or(percented_nom * grouped_quote);
 
 		let convex = by_quoted.checked_mul(&base_unit).unwrap_or(by_quoted * base_unit);
 		let complex = convex.checked_div(&supply).unwrap_or(convex / supply);
@@ -682,19 +645,20 @@ impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
 		}
 
 		let supply = <Self as Stp258Currency<T::AccountId>>::total_issuance(stable_currency_id);
-		let base_unit = <Self as Stp258Currency<T::AccountId>>::base_unit(stable_currency_id);
         let serp_quote_multiple = T::GetSerpQuoteMultiple::get();
+		let base_unit = <Self as Stp258Currency<T::AccountId>>::base_unit(stable_currency_id);
 		let percent = T::GetPercent::get();
-        let supplex = supply.checked_div(&contract_by).unwrap_or(supply / contract_by);
-        let quote = supplex.checked_mul(&serp_quote_multiple).unwrap_or(supplex * serp_quote_multiple);
-		let percented = quote_price.checked_div(&percent).unwrap_or(quote_price / percent);
-		let percented_nom = percent.checked_sub(&quote).unwrap_or(percent + quote);
-		let by_quoted = percented_nom.checked_mul(&percented).unwrap_or(percented_nom * percented);
+        let supply_change = supply.checked_div(&contract_by).unwrap_or(supply / contract_by);
+        let quote = supply_change.checked_mul(&serp_quote_multiple).unwrap_or(supply_change * serp_quote_multiple);
+		let percented_nom = quote_price.checked_div(&percent).unwrap_or(quote_price / percent);
+
+		let grouped_quote = percent.checked_sub(&quote).unwrap_or(percent + quote);
+		let by_quoted = percented_nom.checked_mul(&grouped_quote).unwrap_or(percented_nom * grouped_quote);
 
 		let convex = by_quoted.checked_mul(&base_unit).unwrap_or(by_quoted * base_unit);
 		let complex = convex.checked_div(&supply).unwrap_or(convex / supply);
 		let pay_by_quoted = complex.checked_div(&base_unit).unwrap_or(complex / base_unit);
-
+		
         let serpers = T::GetSerperAcc::get();
 		let native_account = Self::accounts(&serpers, native_currency_id);
 		let stable_account = Self::accounts(&serpers, stable_currency_id);
@@ -708,59 +672,6 @@ impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
 		<TotalIssuance<T>>::mutate(native_currency_id, |v| *v += pay_by_quoted);
 
 		Ok(())
-	}
-
-	/// Quote the amount of currency price quoted as serping fee (serp quoting) for Serpers during serpup,
-	/// the fraction here could be customized to specify the `serp_quoted_price`.
-	/// Therefore buying the native currency for more than market price.
-	///
-	/// The quoted amount to pay serpers for serping up supply.
-		fn pay_serpup_by_quoted(
-		currency_id: Self::CurrencyId, 
-		expand_by: Self::Balance, 
-		quote_price: Self::Balance, 
-	) -> Self::Balance {
-        let supply = <Self as Stp258Currency<T::AccountId>>::total_issuance(currency_id);
-		let base_unit = <Self as Stp258Currency<T::AccountId>>::base_unit(currency_id);
-        let serp_quote_multiple = T::GetSerpQuoteMultiple::get();
-		let percent = T::GetPercent::get();
-        let supplex = supply.checked_div(&expand_by).unwrap_or(supply / expand_by);
-        let quote = supplex.checked_mul(&serp_quote_multiple).unwrap_or(supply * serp_quote_multiple);
-		let percented = quote_price.checked_div(&percent).unwrap_or(quote_price / percent);
-		let percented_nom = percent.checked_sub(&quote).unwrap_or(percent - quote);
-		let by_quoted = percented_nom.checked_mul(&percented).unwrap_or(percented_nom * percented);
-
-		let convex = by_quoted.checked_mul(&base_unit).unwrap_or(by_quoted * base_unit);
-		let complex = convex.checked_div(&supply).unwrap_or(convex / supply);
-		let pay_by_quoted = complex.checked_div(&base_unit).unwrap_or(complex / base_unit);
-		pay_by_quoted
-	}
-
-
-	/// Quote the amount of currency price quoted as serping fee (serp quoting) for Serpers during serpdown, 
-	/// the fraction here could be customized to specify the `serp_quoted_price`.
-	/// Therefore buying the stable currency for more than market price.
-	///
-	/// The quoted amount to pay serpers for serping down supply.
-	fn pay_serpdown_by_quoted(
-		currency_id: Self::CurrencyId, 
-		contract_by: Self::Balance, 
-		quote_price: Self::Balance, 
-	) -> Self::Balance {
-		let supply = <Self as Stp258Currency<T::AccountId>>::total_issuance(currency_id);
-		let base_unit = <Self as Stp258Currency<T::AccountId>>::base_unit(currency_id);
-        let serp_quote_multiple = T::GetSerpQuoteMultiple::get();
-		let percent = T::GetPercent::get();
-        let supplex = supply.checked_div(&contract_by).unwrap_or(supply / contract_by);
-        let quote = supplex.checked_mul(&serp_quote_multiple).unwrap_or(supply * serp_quote_multiple);
-		let percented = quote_price.checked_div(&percent).unwrap_or(quote_price / percent);
-		let percented_nom = percent.checked_add(&quote).unwrap_or(percent + quote);
-		let by_quoted = percented_nom.checked_mul(&percented).unwrap_or(percented_nom * percented);
-
-		let convex = by_quoted.checked_mul(&base_unit).unwrap_or(by_quoted * base_unit);
-		let complex = convex.checked_div(&supply).unwrap_or(convex / supply);
-		let pay_by_quoted = complex.checked_div(&base_unit).unwrap_or(complex / base_unit);
-		pay_by_quoted
 	}
 }
 

@@ -35,48 +35,6 @@ fn supply_change_should_work() {
 }
 
 #[test]
-fn pay_serpup_by_quoted_should_work() {
-	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
-		.build()
-		.execute_with(|| {
-			assert_eq!(Stp258Tokens::pay_serpup_by_quoted(JUSD, 40 * 1_000, 4_000), 3_200);
-		});
-}
-
-#[test]
-fn on_expand_supply_should_work() {
-	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
-		.build()
-		.execute_with(|| {
-			assert_ok!(Stp258Tokens::on_expand_supply(JUSD, 40 * 1_000, 4_000)); 
-			assert_eq!(Stp258Tokens::total_issuance(JUSD), 440 * 1_000);
-		});
-}
-
-#[test]
-fn pay_serpdown_by_quoted_should_work() {
-	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
-		.build()
-		.execute_with(|| {
-			assert_eq!(Stp258Tokens::pay_serpdown_by_quoted(JUSD, 40 * 1_000, 4_000), 4_800);
-		});
-}
-
-#[test]
-fn on_contract_supply_should_work() {
-	ExtBuilder::default()
-		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
-		.build()
-		.execute_with(|| {
-			assert_ok!(Stp258Tokens::on_contract_supply(JUSD, 40 * 1_000, 2_000)); 
-			assert_eq!(Stp258Tokens::total_issuance(JUSD), 440 * 1_000);
-		});
-}
-
-#[test]
 fn serp_elast_should_work() {
 	ExtBuilder::default()
 		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
