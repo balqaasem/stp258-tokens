@@ -68,7 +68,7 @@ use stp258_traits::{
 };
 use sp_runtime::{
 	traits::{
-		AccountIdConversion, AtLeast32BitUnsigned, Bounded, CheckedAdd, CheckedDiv, CheckedSub, MaybeSerializeDeserialize, Member,
+		AccountIdConversion, AtLeast32BitUnsigned, Bounded, CheckedAdd, CheckedDiv, CheckedMul, CheckedSub, MaybeSerializeDeserialize, Member,
 		Saturating, StaticLookup, Zero,
 	},
 	DispatchError, DispatchResult, ModuleId, Perbill, RuntimeDebug,
@@ -79,8 +79,6 @@ use sp_std::{
 	prelude::*,
 	vec::Vec,
 };
-use std::num::Wrapping;
-
 mod default_weight;
 mod imbalances;
 mod mock;
@@ -591,8 +589,9 @@ impl<T: Config> SerpTes<T::AccountId> for Pallet<T> {
 		}
         let native_currency_id = T::GetSerpNativeId::get();
         let serpers = T::GetSerperAcc::get();
-		let base_unit = <Self as Stp258Currency<T::AccountId>>::base_unit(currency_id);
-		let pay_by_quoted = quote_price / base_unit as Self::Balance;
+		let pay_by_quoted = <Self as SerpMarket<T::AccountId>>::pay_serpdown_by_quoted(
+		currency_id, expand_by, quote_price
+		);
         <Self as SerpMarket<T::AccountId>>::expand_supply(
             native_currency_id, currency_id, expand_by as Self::Balance, pay_by_quoted as Self::Balance, &serpers,
         ).map_err(|_| Error::<T>::SerpUpFailed)?;                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
@@ -613,8 +612,9 @@ impl<T: Config> SerpTes<T::AccountId> for Pallet<T> {
 		}
         let native_currency_id = T::GetSerpNativeId::get();
         let serpers = T::GetSerperAcc::get();
-        let base_unit = <Self as Stp258Currency<T::AccountId>>::base_unit(currency_id);
-		let pay_by_quoted = quote_price / base_unit as Self::Balance;
+		let pay_by_quoted = <Self as SerpMarket<T::AccountId>>::pay_serpdown_by_quoted(
+		currency_id, contract_by, quote_price
+		);
         <Self as SerpMarket<T::AccountId>>::contract_supply(
             native_currency_id, currency_id, contract_by, pay_by_quoted, &serpers,
         ).map_err(|_| Error::<T>::SerpDownFailed)?;                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
@@ -641,7 +641,7 @@ impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
 		if expand_by.is_zero() {
 			return Ok(());
 		}
-
+		
 		let native_account = Self::accounts(serpers, native_currency_id);
 		let stable_account = Self::accounts(serpers, stable_currency_id);
 
@@ -694,11 +694,14 @@ impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
 		expand_by: Self::Balance, 
 		quote_price: Self::Balance, 
 	) -> Self::Balance {
-        let base_unit = <Self as Stp258Currency<T::AccountId>>::base_unit(currency_id);
-		
-		let qp = Wrapping(quote_price as Self::Balance);
-		let bu = Wrapping(base_unit as Self::Balance);
-		let pay_by_quoted = quote_price.checked_div(&base_unit).unwrap_or(quote_price / base_unit);
+        let supply = <Self as Stp258Currency<T::AccountId>>::total_issuance(currency_id);
+        let serp_quote_multiple = T::GetSerpQuoteMultiple::get();
+		let percent = T::GetPercent::get();
+        let supplex = supply.checked_div(&expand_by).unwrap_or(supply / expand_by);
+        let quote = supplex.checked_mul(&serp_quote_multiple).unwrap_or(supply * serp_quote_multiple);
+		let percented = quote_price.checked_div(&percent).unwrap_or(quote_price / percent);
+		let percented_nom = percent.checked_sub(&quote).unwrap_or(percent - quote);
+		let pay_by_quoted = percented_nom.checked_mul(&percented).unwrap_or(percented_nom * percented);
 		pay_by_quoted
 	}
 
@@ -713,8 +716,14 @@ impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
 		contract_by: Self::Balance, 
 		quote_price: Self::Balance, 
 	) -> Self::Balance {
-        let base_unit = <Self as Stp258Currency<T::AccountId>>::base_unit(currency_id);
-		let pay_by_quoted = quote_price / base_unit as Self::Balance;
+		let supply = <Self as Stp258Currency<T::AccountId>>::total_issuance(currency_id);
+        let serp_quote_multiple = T::GetSerpQuoteMultiple::get();
+		let percent = T::GetPercent::get();
+        let supplex = supply.checked_div(&contract_by).unwrap_or(supply / contract_by);
+        let quote = supplex.checked_mul(&serp_quote_multiple).unwrap_or(supply * serp_quote_multiple);
+		let percented = quote_price.checked_div(&percent).unwrap_or(quote_price / percent);
+		let percented_nom = percent.checked_add(&quote).unwrap_or(percent + quote);
+		let pay_by_quoted = percented_nom.checked_mul(&percented).unwrap_or(percented_nom * percented);
 		pay_by_quoted
 	}
 }
