@@ -24,6 +24,17 @@ fn minimum_balance_work() {
 }
 
 #[test]
+fn on_serp_block_should_work() {
+	ExtBuilder::default()
+		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
+		.build()
+		.execute_with(|| {
+			assert_eq!(Stp258Tokens::total_issuance(JUSD), 400 * 1_000);
+			assert_ok!(Stp258Tokens::on_serp_block(5, JUSD, 1_100, DNAR, 4_000));
+		});
+}
+
+#[test]
 fn supply_change_should_work() {
 	ExtBuilder::default()
 		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
