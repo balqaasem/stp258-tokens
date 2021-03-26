@@ -582,7 +582,6 @@ impl<T: Config> SerpTes<T::AccountId> for Pallet<T> {
 	/// This is often called by the `serp_elast` from the `SerpTes` trait.
 	///
 	fn on_expand_supply(
-		native_currency_id: Self::CurrencyId, 
 		stable_currency_id: Self::CurrencyId, 
 		expand_by: Self::Balance, 
 		quote_price: Self::Balance, 
@@ -602,7 +601,6 @@ impl<T: Config> SerpTes<T::AccountId> for Pallet<T> {
 	/// This is often called by the `serp_elast` from the `SerpTes` trait.
 	///
     fn on_contract_supply(
-		native_currency_id: Self::CurrencyId, 
 		stable_currency_id: Self::CurrencyId, 
 		contract_by: Self::Balance, 
 		quote_price: Self::Balance, 

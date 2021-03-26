@@ -50,7 +50,7 @@ fn on_expand_supply_should_work() {
 		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
-			assert_ok!(Stp258Tokens::on_expand_supply(DNAR, JUSD, 40 * 1_000, 4_000)); 
+			assert_ok!(Stp258Tokens::on_expand_supply(JUSD, 40 * 1_000, 4_000)); 
 			assert_eq!(Stp258Tokens::total_issuance(JUSD), 440 * 1_000);
 		});
 }
@@ -71,7 +71,7 @@ fn on_contract_supply_should_work() {
 		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
-			assert_ok!(Stp258Tokens::on_contract_supply(DNAR, JUSD, 40 * 1_000, 2_000)); 
+			assert_ok!(Stp258Tokens::on_contract_supply(JUSD, 40 * 1_000, 2_000)); 
 			assert_eq!(Stp258Tokens::total_issuance(JUSD), 440 * 1_000);
 		});
 }
