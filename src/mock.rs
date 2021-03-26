@@ -15,6 +15,7 @@ use sp_std::cell::RefCell;
 pub type AccountId = AccountId32;
 pub type CurrencyId = u32;
 pub type Balance = u64;
+pub type Blocknumber = u64;
 
 pub const DNAR: CurrencyId = 1;
 pub const JUSD: CurrencyId = 2;
@@ -27,6 +28,8 @@ pub const TREASURY_ACCOUNT: AccountId = AccountId32::new([2u8; 32]);
 pub const ID_1: LockIdentifier = *b"1       ";
 pub const ID_2: LockIdentifier = *b"2       ";
 
+pub const ADJUSTMENT_FREQUENCY: Blocknumber = 10;
+
 use crate as stp258_tokens;
 
 parameter_types! {
@@ -37,7 +40,7 @@ impl frame_system::Config for Runtime {
 	type Origin = Origin;
 	type Call = Call;
 	type Index = u64;
-	type BlockNumber = u64;
+	type BlockNumber = Blocknumber;
 	type Hash = H256;
 	type Hashing = ::sp_runtime::traits::BlakeTwo256;
 	type AccountId = AccountId;
@@ -215,6 +218,7 @@ parameter_type_with_key! {
 	};
 }
 
+const PERCENT: Balance = 100;
 const SERP_QUOTE_MULTIPLE: Balance = 2;
 const SINGLE_UNIT: Balance = 1;
 const SERPER_RATIO: Perbill = Perbill::from_percent(25);
@@ -225,12 +229,15 @@ parameter_types! {
 }
 
 parameter_types! {
+	pub const GetPercent: Balance = PERCENT;
 	pub const GetSerperAcc: AccountId = SERPER;
 	pub const GetSerpQuoteMultiple: Balance = SERP_QUOTE_MULTIPLE;
 	pub const GetSettPayAcc: AccountId = SETTPAY;
 	pub const GetSingleUnit: Balance = SINGLE_UNIT;
 	pub const GetSerperRatio: Perbill = SERPER_RATIO;
 	pub const GetSettPayRatio: Perbill = SETT_PAY_RATIO;
+	pub const GetSerpNativeId: CurrencyId = DNAR;
+	pub const AdjustmentFrequency: Blocknumber = ADJUSTMENT_FREQUENCY;
 }
 
 impl Config for Runtime {
@@ -241,6 +248,9 @@ impl Config for Runtime {
 	type WeightInfo = ();
 	type ExistentialDeposits = ExistentialDeposits;
 	type GetBaseUnit = GetBaseUnit;
+	type AdjustmentFrequency = AdjustmentFrequency;
+	type GetPercent = GetPercent;
+	type GetSerpNativeId = GetSerpNativeId;
 	type GetSerpQuoteMultiple = GetSerpQuoteMultiple;
 	type GetSerperAcc = GetSerperAcc;
 	type GetSettPayAcc = GetSettPayAcc;
