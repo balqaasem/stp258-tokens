@@ -498,10 +498,8 @@ impl<T: Config> Pallet<T> {
 }
 
 impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
-	type CurrencyId = T::CurrencyId;
-	type Balance = T::Balance;
-
-	/// Called when `expand_supply` is received from the SERP.
+	/// Called when `expand_supply` is received from the SERP by the SerpTes 
+	/// through the `on_expand_supply` trigger.
 	/// Implementation should `deposit` the `amount` to `serpup_to`, 
 	/// then `amount` will be slashed from `serpup_from` and update
 	/// `new_supply`. `quote_price` is the price ( relative to the settcurrency) of 
@@ -530,7 +528,8 @@ impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
 		Ok(())
 	}
 
-	/// Called when `contract_supply` is received from the SERP.
+	/// Called when `contract_supply` is received from the SERP by the SerpTes 
+	/// through the `on_contract_supply` trigger.
 	/// Implementation should `deposit` the `base_currency_id` (The Native Currency) 
 	/// of `amount` to `serpup_to`, then `amount` will be slashed from `serpup_from` 
 	/// and update `new_supply`. `quote_price` is the price ( relative to the settcurrency) of 
@@ -557,6 +556,61 @@ impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
 		<TotalIssuance<T>>::mutate(native_currency_id, |v| *v += pay_by_quoted);
 
 		Ok(())
+	}
+
+	/// Quote the amount of currency price quoted as serping fee (serp quoting) for Serpers during serpup, 
+	/// the Serp Quote is `new_base_price - quotation` as the amount of native_currency to slash/buy-and-burn from serpers, `base_unit - new_base_price = fractioned`, `fractioned * serp_quote_multiple = quotation`,
+	/// and `serp_quoted_price` is the price the SERP will pay for serping in full including the serp_quote, 
+	/// the fraction for `serp_quoted_price` is same as `(market_price - (mint_rate * 2))` - where `market-price = new_base_price / quote_price`, 
+	/// `(mint_rate * 2) = serp_quote_multiple` as in price balance, `mint_rate = supply/new_supply` that is the ratio of burning/contracting the supply.
+	/// Therefore buying the native currency for more than market price.
+	///
+	/// The quoted amount to pay serpers for serping up supply.
+	fn pay_serpup_by_quoted(
+		currency_id: Self::CurrencyId, 
+		expand_by: Self::Balance, 
+		quote_price: Self::Balance, 
+	) -> Self::Balance {
+        let supply = <Self as Stp258Currency<T::AccountId>>::total_issuance(currency_id);
+		let new_supply = supply.saturating_add(expand_by);
+		let base_unit = <Self as Stp258Currency<T::AccountId>>::base_unit(currency_id);
+        let serp_quote_multiple = T::GetSerpQuoteMultiple::get();
+		let defloated = new_supply.saturating_mul(base_unit);
+		let new_base_price = defloated / supply;
+		let fractioned = new_base_price.saturating_sub(base_unit);
+		let quotation = fractioned.saturating_mul(serp_quote_multiple);
+		let serp_quoted_price = new_base_price.saturating_sub(quotation);
+		let relative_price = quote_price / serp_quoted_price as Self::Balance;
+		let pay_by_quoted = expand_by / relative_price;
+		pay_by_quoted
+	}
+
+	/// Quote the amount of currency price quoted as serping fee (serp quoting) for Serpers during serpdown, 
+	/// the Serp Quote is `quotation + new_base_price`, `base_unit - new_base_price = fractioned`, `fractioned * serp_quote_multiple = quotation`,
+	/// and `serp_quoted_price` is the price the SERP will pay for serping in full including the serp_quote, 
+	/// the fraction for `serp_quoted_price` is same as `(market_price + (burn_rate * 2))` - where `market-price = new_base_price / quote_price`, 
+	/// `(burn_rate * 2) = serp_quote_multiple` as in price balance, `burn_rate = supply/new_supply` that is the ratio of burning/contracting the supply.
+	/// Therefore buying the stable currency for more than market price.
+	///
+	/// The quoted amount to pay serpers for serping down supply.
+	fn pay_serpdown_by_quoted(
+		currency_id: Self::CurrencyId, 
+		contract_by: Self::Balance, 
+		quote_price: Self::Balance, 
+	) -> Self::Balance {
+         let supply = <Self as Stp258Currency<T::AccountId>>::total_issuance(currency_id);
+		let new_supply = supply.saturating_sub(contract_by);
+		let base_unit = <Self as Stp258Currency<T::AccountId>>::base_unit(currency_id);
+        let serp_quote_multiple = T::GetSerpQuoteMultiple::get();
+		let defloated = new_supply.saturating_mul(base_unit);
+		let new_base_price = defloated / supply;
+		let fractioned = base_unit.saturating_sub(new_base_price);
+		let quotation = fractioned.saturating_mul(serp_quote_multiple);
+		let serp_quoted_price = quotation.saturating_add(new_base_price);
+		let relative_price = serp_quoted_price / quote_price as Self::Balance;
+		let defloated_by_quoted = relative_price.saturating_mul(contract_by);
+		let pay_by_quoted = defloated_by_quoted / base_unit;
+		pay_by_quoted
 	}
 }
 
