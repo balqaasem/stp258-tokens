@@ -50,7 +50,7 @@ fn on_expand_supply_should_work() {
 		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
-			assert_ok!(Stp258Tokens::on_expand_supply(JUSD, 40 * 1_000, 4_000)); 
+			assert_ok!(Stp258Tokens::on_expand_supply(DNAR, JUSD, 40 * 1_000, 4_000)); 
 			assert_eq!(Stp258Tokens::total_issuance(JUSD), 440 * 1_000);
 		});
 }
@@ -71,7 +71,7 @@ fn on_contract_supply_should_work() {
 		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
-			assert_ok!(Stp258Tokens::on_contract_supply(JUSD, 40 * 1_000, 2_000)); 
+			assert_ok!(Stp258Tokens::on_contract_supply(DNAR, JUSD, 40 * 1_000, 2_000)); 
 			assert_eq!(Stp258Tokens::total_issuance(JUSD), 440 * 1_000);
 		});
 }
@@ -82,7 +82,7 @@ fn serp_elast_should_work() {
 		.one_hundred_for_alice_n_bob_n_serper_n_settpay()
 		.build()
 		.execute_with(|| {
-			assert_ok!(Stp258Tokens::serp_elast(JUSD, 1_100, 4_000));
+			assert_ok!(Stp258Tokens::serp_elast(JUSD, 1_100, DNAR, 4_000));
 		});
 }
 
@@ -98,9 +98,9 @@ fn expand_supply_should_work() {
 			assert_eq!(Stp258Tokens::reserved_balance(JUSD, &SERPER), 100 * 1_000);
 			assert_eq!(Stp258Tokens::total_issuance(DNAR), 400);
 			assert_eq!(Stp258Tokens::total_issuance(JUSD), 400 * 1_000);
-			assert_ok!(Stp258Tokens::expand_supply(DNAR, JUSD, 40 * 1_000, 2, &SERPER)); 
+			assert_ok!(Stp258Tokens::expand_supply(DNAR, JUSD, 40 * 1_000, 4_000)); 
 			assert_eq!(Stp258Tokens::reserved_balance(JUSD, &SERPER), 140 * 1_000);
-			assert_eq!(Stp258Tokens::reserved_balance(DNAR, &SERPER), 98);
+			assert_eq!(Stp258Tokens::reserved_balance(DNAR, &SERPER), 100 - 12);
 			assert_eq!(Stp258Tokens::total_issuance(JUSD), 440 * 1_000);
 		});
 }
@@ -117,9 +117,9 @@ fn contract_supply_should_work() {
 			assert_eq!(Stp258Tokens::reserved_balance(JUSD, &SERPER), 100 * 1_000);
 			assert_eq!(Stp258Tokens::total_issuance(DNAR), 400);
 			assert_eq!(Stp258Tokens::total_issuance(JUSD), 400 * 1_000);
-			assert_ok!(Stp258Tokens::contract_supply(DNAR, JUSD, 40 * 1_000, 4, &SERPER)); 
+			assert_ok!(Stp258Tokens::contract_supply(DNAR, JUSD, 40 * 1_000, 4_000)); 
 			assert_eq!(Stp258Tokens::reserved_balance(JUSD, &SERPER), 60 * 1_000);
-			assert_eq!(Stp258Tokens::reserved_balance(DNAR, &SERPER), 104);
+			assert_eq!(Stp258Tokens::reserved_balance(DNAR, &SERPER), 100 + 8);
 			assert_eq!(Stp258Tokens::total_issuance(JUSD), 360 * 1_000);
 			assert_eq!(Stp258Tokens::total_issuance(DNAR), 404);
 		});

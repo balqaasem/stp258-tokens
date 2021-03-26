@@ -522,12 +522,13 @@ impl<T: Config> SerpTes<T::AccountId> for Pallet<T> {
 		now: Self::Moment, 
 		stable_currency_id: Self::CurrencyId,
 		stable_currency_price: Self::Balance, 
+		native_currency_id: Self::CurrencyId,
 		native_currency_price: Self::Balance, 
 	) -> DispatchResult {
 		// This can be changed to only correct for small or big price swings.
 		let serp_elast_adjuster = T::AdjustmentFrequency::get();
 		if now + serp_elast_adjuster == now {
-			Self::serp_elast(stable_currency_id, stable_currency_price, native_currency_price)
+			Self::serp_elast(stable_currency_id, stable_currency_price, native_currency_id, native_currency_price)
 		} else {
 			Ok(())
 		}
@@ -555,6 +556,7 @@ impl<T: Config> SerpTes<T::AccountId> for Pallet<T> {
 	fn serp_elast(
 		stable_currency_id: Self::CurrencyId, 
 		stable_currency_price: Self::Balance, 
+		native_currency_id: Self::CurrencyId,
 		native_currency_price: Self::Balance,
 	) -> DispatchResult {
 		let base_unit = <Self as Stp258Currency<T::AccountId>>::base_unit(stable_currency_id);
@@ -562,12 +564,12 @@ impl<T: Config> SerpTes<T::AccountId> for Pallet<T> {
 			stable_currency_price if stable_currency_price > base_unit => {
 				// safe from underflow because `price` is checked to be less than `GetBaseUnit`
 				let expand_by = Self::supply_change(stable_currency_id, stable_currency_price);
-				Self::on_expand_supply(stable_currency_id, expand_by, native_currency_price)?;
+				Self::expand_supply(native_currency_id, stable_currency_id, expand_by, native_currency_price)?;
 			}
 			stable_currency_price if stable_currency_price < base_unit => {
 				// safe from underflow because `price` is checked to be greater than `GetBaseUnit`
 				let contract_by = Self::supply_change(stable_currency_id, stable_currency_price);
-				Self::on_contract_supply(stable_currency_id, contract_by, native_currency_price)?;
+				Self::contract_supply(native_currency_id, stable_currency_id, contract_by, native_currency_price)?;
 			}
 			_ => {
 				native::info!("💸 settcurrency ({:?}) price is stable.", stable_currency_id);
@@ -580,7 +582,8 @@ impl<T: Config> SerpTes<T::AccountId> for Pallet<T> {
 	/// This is often called by the `serp_elast` from the `SerpTes` trait.
 	///
 	fn on_expand_supply(
-		currency_id: Self::CurrencyId, 
+		native_currency_id: Self::CurrencyId, 
+		stable_currency_id: Self::CurrencyId, 
 		expand_by: Self::Balance, 
 		quote_price: Self::Balance, 
 	) -> DispatchResult {
@@ -590,12 +593,12 @@ impl<T: Config> SerpTes<T::AccountId> for Pallet<T> {
         let native_currency_id = T::GetSerpNativeId::get();
         let serpers = T::GetSerperAcc::get();
 		let pay_by_quoted = <Self as SerpMarket<T::AccountId>>::pay_serpdown_by_quoted(
-		currency_id, expand_by, quote_price
+		stable_currency_id, expand_by, quote_price
 		);
         <Self as SerpMarket<T::AccountId>>::expand_supply(
-            native_currency_id, currency_id, expand_by as Self::Balance, pay_by_quoted as Self::Balance, &serpers,
+           native_currency_id, stable_currency_id, expand_by, quote_price,
         ).map_err(|_| Error::<T>::SerpUpFailed)?;                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
-        Self::deposit_event(Event::SerpedUpSupply(currency_id, expand_by));
+        Self::deposit_event(Event::SerpedUpSupply(stable_currency_id, expand_by));
         Ok(().into())
     }
 
@@ -603,7 +606,8 @@ impl<T: Config> SerpTes<T::AccountId> for Pallet<T> {
 	/// This is often called by the `serp_elast` from the `SerpTes` trait.
 	///
     fn on_contract_supply(
-		currency_id: Self::CurrencyId, 
+		native_currency_id: Self::CurrencyId, 
+		stable_currency_id: Self::CurrencyId, 
 		contract_by: Self::Balance, 
 		quote_price: Self::Balance, 
 	) -> DispatchResult {
@@ -613,12 +617,12 @@ impl<T: Config> SerpTes<T::AccountId> for Pallet<T> {
         let native_currency_id = T::GetSerpNativeId::get();
         let serpers = T::GetSerperAcc::get();
 		let pay_by_quoted = <Self as SerpMarket<T::AccountId>>::pay_serpdown_by_quoted(
-		currency_id, contract_by, quote_price
+		stable_currency_id, contract_by, quote_price
 		);
         <Self as SerpMarket<T::AccountId>>::contract_supply(
             native_currency_id, currency_id, contract_by, pay_by_quoted, &serpers,
         ).map_err(|_| Error::<T>::SerpDownFailed)?;                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-        Self::deposit_event(Event::SerpedDownSupply(currency_id, contract_by));
+        Self::deposit_event(Event::SerpedDownSupply(stable_currency_id, contract_by));
         Ok(().into())
     }
 }
@@ -631,17 +635,27 @@ impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
 	/// `new_supply`. `quote_price` is the price ( relative to the settcurrency) of 
 	/// the `native_currency` used to expand settcurrency supply.
 	/// `who` is the account to serp with.
+	/// `quote_price` here is sampled from mock and can be connected to an oracle.
 	fn expand_supply(
 		native_currency_id: Self::CurrencyId, 
 		stable_currency_id: Self::CurrencyId, 
 		expand_by: Self::Balance, 
-		pay_by_quoted: Self::Balance, 
-		serpers: &T::AccountId,
+		quote_price: Self::Balance, 
 	) -> DispatchResult {
 		if expand_by.is_zero() {
 			return Ok(());
 		}
 		
+		let supply = <Self as Stp258Currency<T::AccountId>>::total_issuance(stable_currency_id);
+        let serp_quote_multiple = T::GetSerpQuoteMultiple::get();
+		let percent = T::GetPercent::get();
+        let supplex = supply.checked_div(&expand_by).unwrap_or(supply / expand_by);
+        let quote = supplex.checked_mul(&serp_quote_multiple).unwrap_or(supply * serp_quote_multiple);
+		let percented = quote_price.checked_div(&percent).unwrap_or(quote_price / percent);
+		let percented_nom = percent.checked_sub(&quote).unwrap_or(percent - quote);
+		let pay_by_quoted = percented_nom.checked_mul(&percented).unwrap_or(percented_nom * percented);
+
+        let serpers = T::GetSerperAcc::get();
 		let native_account = Self::accounts(serpers, native_currency_id);
 		let stable_account = Self::accounts(serpers, stable_currency_id);
 
@@ -661,17 +675,18 @@ impl<T: Config> SerpMarket<T::AccountId> for Pallet<T> {
 	/// and update `new_supply`. `quote_price` is the price ( relative to the settcurrency) of 
 	/// the `native_currency` used to contract settcurrency supply.
 	/// `who` is the account to serp with.
+	/// `quote_price` here is sampled from mock and can be connected to an oracle.
 	fn contract_supply(
 		native_currency_id: Self::CurrencyId, 
 		stable_currency_id: Self::CurrencyId, 
 		contract_by: Self::Balance, 
 		pay_by_quoted: Self::Balance, 
-		serpers: &T::AccountId,
 	) -> DispatchResult {
 		if contract_by.is_zero() {
 			return Ok(());
 		}
 
+        let serpers = T::GetSerperAcc::get();
 		let native_account = Self::accounts(serpers, native_currency_id);
 		let stable_account = Self::accounts(serpers, stable_currency_id);
 
