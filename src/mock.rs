@@ -1,4 +1,4 @@
-//! Mocks for the stp258tokens module.
+//! Mocks for the stp258_serp module.
 
 #![cfg(test)]
 
