@@ -1,5 +1,5 @@
-//! # Setheum Tokenization Protocol 258 Serp Module
-//! Multi-Currency Stablecoin SERP Module
+//! # Setheum Tokenization Protocol 258 SERP Module
+//! Multi-Currency Stablecoin SERP (Setheum Elastic Reserve Protocol) Module
 //!
 //! ## Overview
 //!
@@ -36,7 +36,7 @@
 //!
 //! ### Genesis Config
 //!
-//! The STP258 tokens module depends on the `GenesisConfig`. Endowed accounts could be
+//! The STP258 SERP module depends on the `GenesisConfig`. Endowed accounts could be
 //! configured in genesis configs.
 
 // Ensure we're `no_std` when compiling for Wasm.

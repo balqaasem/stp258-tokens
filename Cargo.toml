@@ -1,6 +1,6 @@
 [package]
 authors = ["Setheum Labs<https://github.com/Setheum-Labs>"]
-description = "Fungible tokens module that implements `SettCurrency` trait."
+description = "Fungible SERP stablecoins module that implements `SettCurrency`, `SerpMarket,and `SerpTes` traits."
 edition = "2018"
 homepage = "https://setheum.xyz"
 license = "Apache-2.0 License"
