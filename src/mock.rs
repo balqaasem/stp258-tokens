@@ -1,4 +1,4 @@
-//! Mocks for the stp258tokens module.
+//! Mocks for the stp258_serp module.
 
 #![cfg(test)]
 
@@ -7,7 +7,7 @@ use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{ChangeMembers, Contains, ContainsLengthBound, SaturatingCurrencyToVote},
 };
-use stp258_traits::parameter_type_with_key; 
+use serp_traits::parameter_type_with_key; 
 use sp_core::H256;
 use sp_runtime::{testing::Header, traits::IdentityLookup, AccountId32, Permill, Perbill};
 use sp_std::cell::RefCell;
