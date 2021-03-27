@@ -1,4 +1,4 @@
-# Setheum Tokenization Protocol 258 - Tokens
+# Setheum Tokenization Protocol 258 - SERP
 Multi-Currency Stablecoin SERP Module
 
 ## Overview
