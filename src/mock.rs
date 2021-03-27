@@ -9,23 +9,28 @@ use frame_support::{
 };
 use stp258_traits::parameter_type_with_key; 
 use sp_core::H256;
-use sp_runtime::{testing::Header, traits::IdentityLookup, AccountId32, Permill};
+use sp_runtime::{testing::Header, traits::IdentityLookup, AccountId32, Permill, Perbill};
 use sp_std::cell::RefCell;
 
 pub type AccountId = AccountId32;
 pub type CurrencyId = u32;
 pub type Balance = u64;
+pub type Blocknumber = u64;
 
-pub const DOT: CurrencyId = 1;
-pub const BTC: CurrencyId = 2;
-pub const ETH: CurrencyId = 3;
+pub const DNAR: CurrencyId = 1;
+pub const JUSD: CurrencyId = 2;
+pub const SETT: CurrencyId = 3;
 pub const ALICE: AccountId = AccountId32::new([0u8; 32]);
 pub const BOB: AccountId = AccountId32::new([1u8; 32]);
+pub const SERPER: AccountId = AccountId32::new([3u8; 32]);
+pub const SETTPAY: AccountId = AccountId32::new([4u8; 32]);
 pub const TREASURY_ACCOUNT: AccountId = AccountId32::new([2u8; 32]);
 pub const ID_1: LockIdentifier = *b"1       ";
 pub const ID_2: LockIdentifier = *b"2       ";
 
-use crate as stp258_tokens;
+pub const ADJUSTMENT_FREQUENCY: Blocknumber = 10;
+
+use crate as stp258_serp;
 
 parameter_types! {
 	pub const BlockHashCount: u64 = 250;
@@ -35,7 +40,7 @@ impl frame_system::Config for Runtime {
 	type Origin = Origin;
 	type Call = Call;
 	type Index = u64;
-	type BlockNumber = u64;
+	type BlockNumber = Blocknumber;
 	type Hash = H256;
 	type Hashing = ::sp_runtime::traits::BlakeTwo256;
 	type AccountId = AccountId;
@@ -96,7 +101,7 @@ parameter_types! {
 	pub const SpendPeriod: u64 = 2;
 	pub const Burn: Permill = Permill::from_percent(50);
 	pub const TreasuryModuleId: ModuleId = ModuleId(*b"py/trsry");
-	pub const GetTokenId: CurrencyId = DOT;
+	pub const GetTokenId: CurrencyId = DNAR;
 }
 
 impl pallet_treasury::Config for Runtime {
@@ -195,15 +200,44 @@ impl pallet_elections_phragmen::Config for Runtime {
 parameter_type_with_key! {
 	pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
 		match currency_id {
-			&BTC => 1,
-			&DOT => 2,
+			&DNAR => 2,
+			&SETT => 1 * 10_000,
+			&JUSD => 1 * 1_000,
 			_ => 0,
 		}
 	};
 }
 
+parameter_type_with_key! {
+	pub GetBaseUnit: |currency_id: CurrencyId| -> Balance {
+		match currency_id {
+			&SETT => 10_000,
+			&JUSD => 1_000,
+			_ => 0,
+		}
+	};
+}
+
+const PERCENT: Balance = 100;
+const SERP_QUOTE_MULTIPLE: Balance = 2;
+const SINGLE_UNIT: Balance = 1;
+const SERPER_RATIO: Perbill = Perbill::from_percent(25);
+const SETT_PAY_RATIO: Perbill = Perbill::from_percent(75);
+
 parameter_types! {
 	pub DustAccount: AccountId = ModuleId(*b"orml/dst").into_account();
+}
+
+parameter_types! {
+	pub const GetPercent: Balance = PERCENT;
+	pub const GetSerperAcc: AccountId = SERPER;
+	pub const GetSerpQuoteMultiple: Balance = SERP_QUOTE_MULTIPLE;
+	pub const GetSettPayAcc: AccountId = SETTPAY;
+	pub const GetSingleUnit: Balance = SINGLE_UNIT;
+	pub const GetSerperRatio: Perbill = SERPER_RATIO;
+	pub const GetSettPayRatio: Perbill = SETT_PAY_RATIO;
+	pub const GetSerpNativeId: CurrencyId = DNAR;
+	pub const AdjustmentFrequency: Blocknumber = ADJUSTMENT_FREQUENCY;
 }
 
 impl Config for Runtime {
@@ -213,6 +247,16 @@ impl Config for Runtime {
 	type CurrencyId = CurrencyId;
 	type WeightInfo = ();
 	type ExistentialDeposits = ExistentialDeposits;
+	type GetBaseUnit = GetBaseUnit;
+	type AdjustmentFrequency = AdjustmentFrequency;
+	type GetPercent = GetPercent;
+	type GetSerpNativeId = GetSerpNativeId;
+	type GetSerpQuoteMultiple = GetSerpQuoteMultiple;
+	type GetSerperAcc = GetSerperAcc;
+	type GetSettPayAcc = GetSettPayAcc;
+	type GetSerperRatio = GetSerperRatio;
+	type GetSettPayRatio = GetSettPayRatio;
+	type GetSingleUnit = GetSingleUnit;
 	type OnDust = TransferDust<Runtime, DustAccount>;
 }
 pub type TreasuryCurrencyAdapter = <Runtime as pallet_treasury::Config>::Currency;
@@ -227,7 +271,7 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Module, Call, Storage, Config, Event<T>},
-		Stp258Tokens: stp258_tokens::{Module, Storage, Event<T>, Config<T>},
+		Stp258Serp: stp258_serp::{Module, Storage, Event<T>, Config<T>},
 		Treasury: pallet_treasury::{Module, Call, Storage, Config, Event<T>},
 		ElectionsPhragmen: pallet_elections_phragmen::{Module, Call, Storage, Event<T>},
 	}
@@ -253,13 +297,26 @@ impl ExtBuilder {
 		self
 	}
 
-	pub fn one_hundred_for_alice_n_bob(self) -> Self {
-		self.balances(vec![(ALICE, DOT, 100), (BOB, DOT, 100)])
+	pub fn one_hundred_for_alice_n_bob_n_serper_n_settpay(self) -> Self {
+		self.balances(vec![
+			(ALICE, DNAR, 100), 
+			(BOB, DNAR, 100),
+			(SERPER, DNAR, 100),
+			(SETTPAY, DNAR, 100),
+			(ALICE, SETT, 100 * 10_000), 
+			(BOB, SETT, 100 * 10_000),
+			(SERPER, SETT, 100 * 10_000),
+			(SETTPAY, SETT, 100 * 10_000),
+			(ALICE, JUSD, 100 * 1_000), 
+			(BOB, JUSD, 100 * 1_000),
+			(SERPER, JUSD, 100 * 1_000),
+			(SETTPAY, JUSD, 100 * 1_000),
+			])
 	}
 
 	pub fn one_hundred_for_treasury_account(mut self) -> Self {
 		self.treasury_genesis = true;
-		self.balances(vec![(TREASURY_ACCOUNT, DOT, 100)])
+		self.balances(vec![(TREASURY_ACCOUNT, DNAR, 100)])
 	}
 
 	pub fn build(self) -> sp_io::TestExternalities {
@@ -267,7 +324,7 @@ impl ExtBuilder {
 			.build_storage::<Runtime>()
 			.unwrap();
 
-		stp258_tokens::GenesisConfig::<Runtime> {
+		stp258_serp::GenesisConfig::<Runtime> {
 			endowed_accounts: self.endowed_accounts,
 		}
 		.assimilate_storage(&mut t)
