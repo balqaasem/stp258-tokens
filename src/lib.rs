@@ -57,7 +57,7 @@ use frame_support::{
 	transactional,
 };
 use frame_system::{ensure_signed, pallet_prelude::*};
-use stp258_traits::{
+use serp_traits::{
 	account::MergeAccount,
 	arithmetic::{self, Signed},
 	BalanceStatus, 
