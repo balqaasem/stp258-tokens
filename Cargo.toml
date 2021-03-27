@@ -7,6 +7,8 @@ license = "Apache-2.0 License"
 name = "stp258-serp"
 version = "0.5.3"
 repository = "https://github.com/Setheum-Labs/Setheum/"
+documentation = "https://wiki.setheum.xyz"
+readme = "README.md"
 
 [dependencies]
 serde = { version = "1.0.111", optional = true }
