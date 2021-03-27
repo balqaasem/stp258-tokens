@@ -1,20 +1,20 @@
-//! # Setheum Tokenization Protocol 258 Tokens Module
+//! # Setheum Tokenization Protocol 258 Serp Module
 //! Multi-Currency Stablecoin SERP Module
 //!
 //! ## Overview
 //!
-//! The stp258 module provides fungible multiple stable currencies functionality that implements `SettCurrency` trait.
+//! The stp258 module provides fungible multiple stable currencies functionality that implements `Stp258Currency` trait, 
+//! the `SerpTes` trait, the `SetheumCurrency` trait and the `SerpMarket` trait.
 //!
 //! The stp258 module provides functions for:
 //!
+//! - Expanding and contracting stablecoin supply with SERP algorithms.
 //! - Querying and setting the balance of a given account.
 //! - Getting and managing total issuance.
 //! - Balance transfer between accounts.
 //! - Depositing and withdrawing balance.
 //! - Slashing an account balance.
 //! - Minting and Burning currencies.
-//! - Fetching prices for currencies.
-//! - A basket_token could be made by combining a basket of prices into one in any desired ratio. Could be done on runtime, the basket_token price_of_pegs and basket_ratio logic could be defined in an offchain worker and fed on-chain.
 //!
 //! ### Implementations
 //!
@@ -24,6 +24,8 @@
 //! - `Stp258CurrencyExtended` - Extended `Stp258Currency` with additional helper
 //!   types and methods, like updating balance
 //! by a given signed integer amount.
+//! - `SerpTes` - Abstraction over a fungible multi-currency stablecoin Token Elasticity of Supply system based on Setheum SERP.
+//! - `SerpMarket` - Abstraction over a fungible multi-currency stablecoin Token Stability system based on Setheum SERP.
 //!
 //! ## Interface
 //!

@@ -30,7 +30,7 @@ pub const ID_2: LockIdentifier = *b"2       ";
 
 pub const ADJUSTMENT_FREQUENCY: Blocknumber = 10;
 
-use crate as stp258_tokens;
+use crate as stp258_serp;
 
 parameter_types! {
 	pub const BlockHashCount: u64 = 250;
@@ -271,7 +271,7 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Module, Call, Storage, Config, Event<T>},
-		Stp258Tokens: stp258_tokens::{Module, Storage, Event<T>, Config<T>},
+		Stp258Serp: stp258_serp::{Module, Storage, Event<T>, Config<T>},
 		Treasury: pallet_treasury::{Module, Call, Storage, Config, Event<T>},
 		ElectionsPhragmen: pallet_elections_phragmen::{Module, Call, Storage, Event<T>},
 	}
@@ -324,7 +324,7 @@ impl ExtBuilder {
 			.build_storage::<Runtime>()
 			.unwrap();
 
-		stp258_tokens::GenesisConfig::<Runtime> {
+		stp258_serp::GenesisConfig::<Runtime> {
 			endowed_accounts: self.endowed_accounts,
 		}
 		.assimilate_storage(&mut t)

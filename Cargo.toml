@@ -4,7 +4,7 @@ description = "Fungible tokens module that implements `SettCurrency` trait."
 edition = "2018"
 homepage = "https://setheum.xyz"
 license = "Apache-2.0 License"
-name = "stp258-tokens"
+name = "stp258-serp"
 version = "0.5.3"
 repository = "https://github.com/Setheum-Labs/Setheum/"
 
