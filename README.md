@@ -3,7 +3,7 @@ Multi-Currency Stablecoin SERP Module
 
 ## Overview
 
-The stp258 module provides fungible multiple stable currencies functionality that implements `SettCurrency` trait and the `SerpMarket` trait that enables the Serping up and down of the currencies supply through Setheum's serping technology for currency supply elasticity.
+The stp258 module provides fungible multiple stable currencies functionality that implements `SettCurrency` traits, the `SerpTes` trait and the `SerpMarket` trait that enables the Serping up and down of the currencies supply through Setheum's serping technology for currency supply elasticity.
 
 The stp258 module provides functions for:
 
