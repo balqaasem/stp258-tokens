@@ -91,7 +91,6 @@ fn contract_supply_should_work() {
 		});
 }
 
-
 #[test]
 fn is_module_account_id_work() {
 	ExtBuilder::default().build().execute_with(|| {
