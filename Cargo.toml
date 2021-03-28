@@ -3,10 +3,10 @@ authors = ["Setheum Labs<https://github.com/Setheum-Labs>"]
 description = "Fungible SERP stablecoins module that implements `SettCurrency`, `SerpMarket,and `SerpTes` traits."
 edition = "2018"
 homepage = "https://setheum.xyz"
-license = "Apache-2.0 License"
+license = "Apache-2.0"
 name = "stp258-serp"
 version = "0.5.3"
-repository = "https://github.com/Setheum-Labs/Setheum/"
+repository = "https://github.com/Setheum-Labs/Setheum/stp258-serp"
 documentation = "https://wiki.setheum.xyz"
 readme = "README.md"
 
